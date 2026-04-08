@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Tracker - CBS</title>
+    <style>
+        body { margin: 0; font-family: sans-serif; background-color: #f4f6f9; }
+        .header { background: #2f3c88; color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .container { padding: 20px; max-width: 1000px; margin: auto; }
+        .tracker-card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-top: 5px solid #f95d6a;}
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        input, select, button { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;}
+        button { background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; }
+        button:hover { background-color: #218838; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2>Payment Tracker System</h2>
+    <a href="unit-dashboard.html" style="color: white; text-decoration: none;">Back to Dashboard</a>
+</div>
+
+<div class="container">
+    <div class="tracker-card">
+        <h3 style="color: #2f3c88; margin-top: 0;">Generate New Payment Tracker</h3>
+        <div class="grid">
+            <input type="text" placeholder="Student Unique ID (e.g. kk02170001)">
+            <input type="text" placeholder="UF Name" value="Ambernath Central" readonly>
+            <input type="text" placeholder="UF Code" value="UF-AMB-01" readonly>
+            <input type="text" placeholder="Area" value="Ambernath">
+            
+            <select id="mumbaiClass">
+                <option value="">Select Class Category</option>
+                <option value="Class A">Class A</option>
+                <option value="Class B">Class B</option>
+                <option value="Class C">Class C</option>
+            </select>
+            
+            <input type="number" placeholder="Admission Amount (₹)">
+        </div>
+        <button onclick="generateTracker()">Generate Tracker</button>
+    </div>
+</div>
+
+<script>
+    function generateTracker() {
+        // Logic to push payment record to Supabase
+        alert("Payment tracker generated successfully and linked to the student.");
+    }
+</script>
+</body>
+</html>
