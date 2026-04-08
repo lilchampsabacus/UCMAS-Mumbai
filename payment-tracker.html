@@ -197,15 +197,21 @@
         fetchLevel1Students();
     };
 
-    // Fetch ONLY Active Level 1 Students
+    // Fetch ONLY Active Level 1 Students OWNED by the current UF
     async function fetchLevel1Students() {
+        // Authenticate the user first
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return; // Stop if not logged in
+
         const dropdown = document.getElementById('ptStudent');
         
+        // Filter by Active, Level 1, AND created_by
         const { data, error } = await supabase
             .from('students')
             .select('unique_id, first_name, last_name, standard')
             .eq('status', 'Active')
-            .eq('standard', 'Level 1'); 
+            .eq('standard', 'Level 1')
+            .eq('created_by', user.id); 
 
         dropdown.innerHTML = '';
 
