@@ -4,50 +4,262 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment Tracker - CBS</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
     <style>
-        body { margin: 0; font-family: sans-serif; background-color: #f4f6f9; }
-        .header { background: #2f3c88; color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .container { padding: 20px; max-width: 1000px; margin: auto; }
-        .tracker-card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-top: 5px solid #f95d6a;}
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        input, select, button { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;}
-        button { background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; }
-        button:hover { background-color: #218838; }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f95d6a 0%, #ffffff 50%, #2f3c88 100%); background-attachment: fixed; color: #333; min-height: 100vh; }
+        .glass-panel { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 16px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15); }
+        .header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-radius: 0 0 16px 16px; margin-bottom: 30px; color: #2f3c88; }
+        .header a { color: #2f3c88; text-decoration: none; font-weight: bold; margin-left: 20px;}
+        .container { padding: 0 40px; max-width: 1300px; margin: auto; }
+        
+        .tab-bar { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(255, 255, 255, 0.95); padding: 12px 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); align-items: center; flex-wrap: wrap; }
+        .tab-btn, .tab-link { background: transparent; border: none; padding: 10px 20px; font-size: 0.95em; font-weight: bold; color: #6b7280; cursor: pointer; border-radius: 8px; transition: 0.3s; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+        .tab-btn:hover, .tab-link:hover { background: rgba(47, 60, 136, 0.08); color: #2f3c88; }
+        .tab-btn.active, .tab-link.active { background: #2f3c88; color: white; box-shadow: 0 4px 10px rgba(47, 60, 136, 0.3); }
+        
+        .form-section { background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.05); }
+        h3 { border-bottom: 2px solid rgba(47, 60, 136, 0.1); padding-bottom: 10px; color: #2f3c88; margin-top: 0;}
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; background: white; color: #333; font-family: inherit; }
+        
+        button.action-btn { background-color: #f95d6a; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 20px; padding: 12px; border-radius: 8px; font-size: 1.05em; transition: 0.3s; width: 100%; }
+        button.action-btn.blue { background-color: #2f3c88; }
+        button.action-btn.green { background-color: #28a745; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4); }
+        
+        table { width: 100%; border-collapse: collapse; overflow: hidden; color: #333; background: rgba(255,255,255,0.7); border-radius: 12px;}
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(0, 0, 0, 0.1); }
+        th { background-color: rgba(47, 60, 136, 0.1); font-weight: 600; color: #2f3c88; }
+        
+        /* PDF specific styles to ensure it looks clean when downloaded */
+        #pdfContent { background: white; padding: 40px; border-radius: 8px; color: #333; }
+        .pdf-header { text-align: center; border-bottom: 2px solid #2f3c88; padding-bottom: 15px; margin-bottom: 20px; }
+        .pdf-header h2 { color: #2f3c88; margin: 0 0 5px 0; }
+        .pdf-details { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 1.1em; }
+        .pdf-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .pdf-table th, .pdf-table td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        .pdf-table th { background-color: #f8f9fa; color: #2f3c88; }
+        .pdf-total { text-align: right; font-size: 1.2em; font-weight: bold; color: #2f3c88; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h2>Payment Tracker System</h2>
-    <a href="unit-dashboard.html" style="color: white; text-decoration: none;">Back to Dashboard</a>
+<div class="glass-panel header" style="border-radius: 0 0 16px 16px;">
+    <h2 style="margin: 0;">Unit Franchise Dashboard</h2>
+    <a href="index.html">Logout</a>
 </div>
 
 <div class="container">
-    <div class="tracker-card">
-        <h3 style="color: #2f3c88; margin-top: 0;">Generate New Payment Tracker</h3>
-        <div class="grid">
-            <input type="text" placeholder="Student Unique ID (e.g. kk02170001)">
-            <input type="text" placeholder="UF Name" value="Ambernath Central" readonly>
-            <input type="text" placeholder="UF Code" value="UF-AMB-01" readonly>
-            <input type="text" placeholder="Area" value="Ambernath">
-            
-            <select id="mumbaiClass">
-                <option value="">Select Class Category</option>
-                <option value="Class A">Class A</option>
-                <option value="Class B">Class B</option>
-                <option value="Class C">Class C</option>
-            </select>
-            
-            <input type="number" placeholder="Admission Amount (₹)">
-        </div>
-        <button onclick="generateTracker()">Generate Tracker</button>
+    
+    <div class="tab-bar">
+        <a href="unit-dashboard.html" class="tab-link">📋 Students</a>
+        <a href="unit-dashboard.html" class="tab-link">👩‍🏫 Course Instructors</a>
+        <a href="unit-dashboard.html" class="tab-link">📅 Batch Management</a>
+        <a href="unit-dashboard.html" class="tab-link">📉 Dropouts</a>
+        <a href="unit-dashboard.html" class="tab-link" style="color: #8b5cf6;">🎟️ Support Tickets</a>
+        <button class="tab-btn active">💳 Payment Tracker</button>
     </div>
+
+    <div class="form-section">
+        <h3>Fee Planner Configuration</h3>
+        <p style="color: #666; font-size: 0.9em; margin-bottom: 20px;">Generate a customized payment schedule for parents. Currently showing active <b>Level 1</b> students.</p>
+        
+        <div class="grid-2">
+            <div>
+                <label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Select Student</label>
+                <select id="ptStudent">
+                    <option value="">Loading Level 1 Students...</option>
+                </select>
+            </div>
+            <div>
+                <label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Center Class Category</label>
+                <select id="ptClass">
+                    <option value="1480">Class A (₹1480 / month)</option>
+                    <option value="1380">Class B (₹1380 / month)</option>
+                    <option value="1280">Class C (₹1280 / month)</option>
+                </select>
+            </div>
+            <div>
+                <label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Start Month & Year</label>
+                <input type="month" id="ptStartMonth" required>
+            </div>
+            <div>
+                <label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Select Academic Year</label>
+                <select id="ptYear">
+                    <option value="1">1st Year (Includes ₹1700 Kit Fee)</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                    <option value="5">5th Year</option>
+                </select>
+            </div>
+            <div style="grid-column: span 2;">
+                <label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Payment Frequency</label>
+                <select id="ptFrequency">
+                    <option value="4">Quarterly (4 Installments)</option>
+                    <option value="3">Thrice a year (3 Installments)</option>
+                    <option value="2">Half Yearly (2 Installments)</option>
+                    <option value="1">Yearly (1 Installment - Full Payment)</option>
+                </select>
+            </div>
+        </div>
+        <button class="action-btn blue" onclick="generatePlanner()">Generate Fee Planner</button>
+    </div>
+
+    <div id="plannerDisplay" class="glass-panel" style="display:none; padding: 20px; margin-bottom: 50px;">
+        
+        <div id="pdfContent">
+            <div class="pdf-header">
+                <h2>UCMAS Annual Fee Schedule</h2>
+                <p style="margin:0; color:#666;">Generated on: <span id="pdfGenDate"></span></p>
+            </div>
+            
+            <div class="pdf-details">
+                <div><b>Student:</b> <span id="pdfStudentName"></span></div>
+                <div><b>Academic Year:</b> <span id="pdfYear"></span></div>
+                <div><b>Plan Type:</b> <span id="pdfFrequency"></span></div>
+            </div>
+
+            <table class="pdf-table">
+                <thead>
+                    <tr>
+                        <th>Installment #</th>
+                        <th>Billing Month</th>
+                        <th>Tuition Fee</th>
+                        <th>Kit Fee</th>
+                        <th>Total Due</th>
+                    </tr>
+                </thead>
+                <tbody id="pdfTableBody">
+                    </tbody>
+            </table>
+            
+            <div class="pdf-total">
+                Total Annual Amount: ₹<span id="pdfGrandTotal"></span>
+            </div>
+            <p style="text-align: center; margin-top: 30px; font-size: 0.85em; color: #888;">
+                * Fees are calculated based on a 12-month academic cycle.<br>
+                * Kit fee is a one-time charge applicable only in Year 1.
+            </p>
+        </div>
+
+        <button class="action-btn green" onclick="downloadPDF()">⬇️ Download PDF for Parent</button>
+    </div>
+
 </div>
 
 <script>
-    function generateTracker() {
-        // Logic to push payment record to Supabase
-        alert("Payment tracker generated successfully and linked to the student.");
+    // Database Initialization
+    const supabaseUrl = 'https://jugzuutcnxcipoyawhbq.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1Z3p1dXRjbnhjaXBveWF3aGJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mjg5OTgsImV4cCI6MjA5MTIwNDk5OH0.HzkuDQ8Yi5rq5ZP95xx8oxC1GCNcUr1kGs5F-psu95I';
+    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    window.onload = function() {
+        fetchLevel1Students();
+    };
+
+    // Fetch ONLY Active Level 1 Students
+    async function fetchLevel1Students() {
+        const dropdown = document.getElementById('ptStudent');
+        
+        // Fetch active students specifically in Level 1
+        const { data, error } = await supabase
+            .from('students')
+            .select('unique_id, first_name, last_name, standard')
+            .eq('status', 'Active')
+            .eq('standard', 'Level 1'); // Filter logic requested
+
+        dropdown.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            dropdown.innerHTML = '<option value="" disabled>No active Level 1 students found.</option>';
+            return;
+        }
+
+        dropdown.innerHTML = '<option value="" disabled selected>Select a student...</option>';
+        data.forEach(s => {
+            dropdown.innerHTML += `<option value="${s.first_name} ${s.last_name} (${s.unique_id})">${s.first_name} ${s.last_name} - ${s.unique_id}</option>`;
+        });
+    }
+
+    // Logic to calculate and generate the planner
+    function generatePlanner() {
+        const student = document.getElementById('ptStudent').value;
+        const monthlyFee = parseInt(document.getElementById('ptClass').value);
+        const startMonthStr = document.getElementById('ptStartMonth').value; // Format: YYYY-MM
+        const year = parseInt(document.getElementById('ptYear').value);
+        const freqSelect = document.getElementById('ptFrequency');
+        const numInstallments = parseInt(freqSelect.value);
+        const freqText = freqSelect.options[freqSelect.selectedIndex].text;
+
+        if(!student || !startMonthStr) {
+            alert("Please select a student and a starting month.");
+            return;
+        }
+
+        // --- MATH LOGIC ---
+        const annualTuition = monthlyFee * 12; 
+        const baseInstallment = annualTuition / numInstallments;
+        const kitFee = (year === 1) ? 1700 : 0; 
+        const grandTotal = annualTuition + kitFee;
+
+        // Months between each installment
+        const monthsStep = 12 / numInstallments; 
+        let startDate = new Date(startMonthStr + "-01");
+
+        // --- RENDER PDF CONTENT ---
+        document.getElementById('pdfGenDate').innerText = new Date().toLocaleDateString();
+        document.getElementById('pdfStudentName').innerText = student;
+        document.getElementById('pdfYear').innerText = `Year ${year}`;
+        document.getElementById('pdfFrequency').innerText = freqText;
+        document.getElementById('pdfGrandTotal').innerText = grandTotal.toLocaleString('en-IN');
+
+        const tbody = document.getElementById('pdfTableBody');
+        tbody.innerHTML = '';
+
+        for(let i = 1; i <= numInstallments; i++) {
+            // First installment gets the kit fee if it's Year 1
+            let currentKitFee = (i === 1) ? kitFee : 0;
+            let totalRowAmount = baseInstallment + currentKitFee;
+
+            // Format Month and Year (e.g. "June 2026")
+            let monthName = startDate.toLocaleString('default', { month: 'long' });
+            let yearNum = startDate.getFullYear();
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${i}</b></td>
+                    <td>${monthName} ${yearNum}</td>
+                    <td>₹${baseInstallment.toLocaleString('en-IN')}</td>
+                    <td>₹${currentKitFee.toLocaleString('en-IN')}</td>
+                    <td><b>₹${totalRowAmount.toLocaleString('en-IN')}</b></td>
+                </tr>
+            `;
+
+            // Step forward to the next billing month
+            startDate.setMonth(startDate.getMonth() + monthsStep);
+        }
+
+        // Reveal the planner
+        document.getElementById('plannerDisplay').style.display = 'block';
+    }
+
+    // Function to convert the HTML div into a downloadable PDF
+    function downloadPDF() {
+        const studentName = document.getElementById('pdfStudentName').innerText.split(' ')[0]; // Get first name for filename
+        const element = document.getElementById('pdfContent');
+        
+        const opt = {
+            margin:       10,
+            filename:     `UCMAS_Fee_Planner_${studentName}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Generate and save
+        html2pdf().set(opt).from(element).save();
     }
 </script>
 </body>
