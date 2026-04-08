@@ -142,11 +142,43 @@
     </div>
 </div>
 
-<div id="addStudentModal" class="modal"><div class="modal-content"><h3>Add New Student</h3><div class="grid-2"><input type="text" id="stuFirstName" placeholder="Student First Name"><input type="text" id="stuLastName" placeholder="Student Last Name"><input type="date" id="stuDob"><select id="stuGender"><option value="">Select Gender</option><option value="Male">Male</option><option value="Female">Female</option></select><select id="stuStandard"><option value="">Select Starting Level</option><option value="Level 0">Level 0</option><option value="Level 1">Level 1</option><option value="Level 2">Level 2</option><option value="Level 3">Level 3</option></select><input type="text" id="stuSchool" placeholder="School Name"><input type="text" id="fatherName" placeholder="Father's Name"><input type="tel" id="fatherMobile" placeholder="Father's Mobile"><input type="text" id="motherName" placeholder="Mother's Name"><input type="tel" id="motherMobile" placeholder="Mother's Mobile"></div><div class="modal-actions"><button class="btn-cancel" onclick="closeModal('addStudentModal')">Cancel</button><button class="action-btn blue" style="width: auto; margin-top: 0;" onclick="registerStudent()">Register</button></div></div></div>
+<div id="addStudentModal" class="modal"><div class="modal-content"><h3>Add New Student</h3><div class="grid-2"><input type="text" id="stuFirstName" placeholder="Student First Name"><input type="text" id="stuLastName" placeholder="Student Last Name"><input type="date" id="stuDob"><select id="stuGender"><option value="">Select Gender</option><option value="Male">Male</option><option value="Female">Female</option></select><select id="stuStandard">
+    <option value="">Select Starting Level</option>
+    <option value="Level 0">Level 0</option>
+    <option value="Level 1">Level 1</option>
+    <option value="Level 2">Level 2</option>
+    <option value="Level 3">Level 3</option>
+    <option value="Level 4">Level 4</option>
+    <option value="Level 5">Level 5</option>
+    <option value="Level 6">Level 6</option>
+    <option value="Level 7">Level 7</option>
+    <option value="Level 8">Level 8</option>
+    <option value="Level 9">Level 9</option>
+    <option value="Level 10">Level 10</option>
+</select><input type="text" id="stuSchool" placeholder="School Name"><input type="text" id="fatherName" placeholder="Father's Name"><input type="tel" id="fatherMobile" placeholder="Father's Mobile"><input type="text" id="motherName" placeholder="Mother's Name"><input type="tel" id="motherMobile" placeholder="Mother's Mobile"></div><div class="modal-actions"><button class="btn-cancel" onclick="closeModal('addStudentModal')">Cancel</button><button class="action-btn blue" style="width: auto; margin-top: 0;" onclick="registerStudent()">Register</button></div></div></div>
 
 <div id="addCiModal" class="modal"><div class="modal-content"><h3>Add Course Instructor</h3><div class="grid-2"><input type="text" id="ciName" placeholder="Instructor Name"><input type="text" id="ciCode" placeholder="Instructor Code"><input type="tel" id="ciMobile" placeholder="Mobile Number" style="grid-column: span 2;"></div><div class="modal-actions"><button class="btn-cancel" onclick="closeModal('addCiModal')">Cancel</button><button class="action-btn blue" style="width: auto; margin-top: 0;" onclick="addInstructor()">Save</button></div></div></div>
 
-<div id="addBatchModal" class="modal"><div class="modal-content"><h3>Create Batch</h3><div class="grid-2"><div><label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Assign Instructor</label><select id="assignCi"><option value="">Loading...</option></select><label style="display:block; margin:15px 0 5px; font-weight:bold; color:#2f3c88;">Batch Details</label><select id="batchDay"><option value="">Select Day</option><option value="Monday">Monday</option><option value="Saturday">Saturday</option><option value="Sunday">Sunday</option></select><input type="time" id="batchTime" style="margin-top:10px;"><select id="batchLevel" style="margin-top:10px;"><option value="">Select Level</option><option value="Level 0">Level 0</option><option value="Level 1">Level 1</option><option value="Level 2">Level 2</option></select></div><div><label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Select Students</label><select id="selectStudents" multiple><option value="">Loading...</option></select></div></div><div class="modal-actions"><button class="btn-cancel" onclick="closeModal('addBatchModal')">Cancel</button><button class="action-btn blue" style="width: auto; margin-top: 0;" onclick="createBatch()">Create Batch</button></div></div></div>
+<div id="addBatchModal" class="modal"><div class="modal-content"><h3>Create Batch</h3><div class="grid-2"><div><label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Assign Instructor</label><select id="assignCi"><option value="">Loading...</option></select><label style="display:block; margin:15px 0 5px; font-weight:bold; color:#2f3c88;">Batch Details</label><select id="batchDay"><option value="">Select Day</option>
+    <option value="Monday">Monday</option>
+    <option value="Tuesday">Tuesday</option>
+    <option value="Wednesday">Wednesday </option>
+    <option value="Thursday">Thursday</option>
+    <option value="Friday">Friday</option>
+    <option value="Saturday">Saturday</option>
+    <option value="Sunday">Sunday</option>
+</select><input type="time" id="batchTime" style="margin-top:10px;"><select id="batchLevel" style="margin-top:10px;"><option value="">Select Level</option>
+    <option value="Level 0">Level 0</option>
+    <option value="Level 1">Level 1</option>
+    <option value="Level 2">Level 2</option>
+    <option value="Level 3">Level 3</option>
+    <option value="Level 4">Level 4</option>
+    <option value="Level 5">Level 5</option>
+    <option value="Level 6">Level 6</option>
+    <option value="Level 7">Level 7</option>
+    <option value="Level 9">Level 8</option>
+    <option value="Level 10">Level 10</option>
+</select></div><div><label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Select Students</label><select id="selectStudents" multiple><option value="">Loading...</option></select></div></div><div class="modal-actions"><button class="btn-cancel" onclick="closeModal('addBatchModal')">Cancel</button><button class="action-btn blue" style="width: auto; margin-top: 0;" onclick="createBatch()">Create Batch</button></div></div></div>
 
 <div id="requestRepeatModal" class="modal">
     <div class="modal-content">
