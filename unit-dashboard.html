@@ -465,10 +465,22 @@
     }
 
     // ================= NEW BATCH LOGIC (TIMELINE & FILTERING) =================
+    
+    // Helper function to ONLY get students who are in an ACTIVE batch
+    async function getActiveAssignedStudentIds() {
+        const { data: activeBatches } = await supabase.from('batches').select('id').eq('status', 'Active');
+        if (!activeBatches || activeBatches.length === 0) return [];
+        
+        const activeBatchIds = activeBatches.map(b => b.id);
+        const { data: activeEnrollments } = await supabase.from('student_batches').select('student_id').in('batch_id', activeBatchIds);
+            
+        return activeEnrollments ? activeEnrollments.map(e => e.student_id) : [];
+    }
+
     function openCreateBatchModal() {
         document.getElementById('batchLevel').value = '';
         document.getElementById('batchStartDate').value = '';
-        document.getElementById('holidayExtension').value = '0'; // Reset holiday
+        document.getElementById('holidayExtension').value = '0'; 
         filterStudentsForBatch(); 
         openModal('addBatchModal');
     }
@@ -484,12 +496,13 @@
             return;
         }
 
-        const { data: assigned } = await supabase.from('student_batches').select('student_id');
-        const assignedIds = assigned ? assigned.map(a => a.student_id) : [];
+        // Only pull IDs of students who are currently locked in an active batch
+        const assignedIds = await getActiveAssignedStudentIds();
         
         let count = 0;
         allStudentsData.forEach(s => {
             const sLevel = s.standard || 'Level 0';
+            // Student must NOT be in an active batch, must be Active status, and match the selected level
             if (!assignedIds.includes(s.unique_id) && s.status === 'Active' && sLevel === selectedLevel) {
                 dropdown.innerHTML += `<option value="${s.unique_id}">${s.first_name} ${s.last_name} (${s.unique_id})</option>`;
                 count++;
@@ -590,14 +603,10 @@
         
         if(!day || !time || !level || !ci || !startDateVal) { alert("Please fill out all batch details including Start Date."); return; }
         
-        // Calculate Expected End Date including Holiday Extensions
         const startDate = new Date(startDateVal);
         const expectedEndDate = new Date(startDate);
-        
-        // 1. Add base duration
         expectedEndDate.setMonth(expectedEndDate.getMonth() + durationVal);
         
-        // 2. Add holiday extensions (if any)
         if(holidayExtensionDays > 0) {
             expectedEndDate.setDate(expectedEndDate.getDate() + holidayExtensionDays);
         }
