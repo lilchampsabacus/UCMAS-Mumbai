@@ -214,7 +214,7 @@
         if (event.target == modal) { closeModal(); }
     }
 
-    // Edge Function Submission Logic
+    // Real Supabase Submission Logic
     async function submitNewUF() {
         const name = document.getElementById('newUfName').value;
         const code = document.getElementById('newUfCode').value;
@@ -234,8 +234,21 @@
         btn.innerText = "Creating...";
 
         try {
-            // MOCK EDGE FUNCTION CALL
-            await new Promise(r => setTimeout(r, 1000)); 
+            // ACTUAL SUPABASE BACKEND CALL
+            const { data, error } = await supabase.auth.signUp({
+                email: generatedEmail,
+                password: generatedPassword,
+            });
+
+            if (error) {
+                // Friendly error handling instead of technical database jargon
+                if (error.message.includes("already registered") || error.status === 422) {
+                    alert("User already existed.");
+                } else {
+                    alert("An issue occurred while creating the franchise. Please try again.");
+                }
+                return;
+            }
 
             // Show generated credentials
             alert(`Franchise created successfully!\n\nLogin Email: ${generatedEmail}\nDefault Password: ${generatedPassword}`);
