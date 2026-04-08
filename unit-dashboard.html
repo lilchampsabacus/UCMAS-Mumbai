@@ -178,6 +178,7 @@
 </div>
 
 <script>
+    // Database Initialization
     const supabaseUrl = 'https://jugzuutcnxcipoyawhbq.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1Z3p1dXRjbnhjaXBveWF3aGJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mjg5OTgsImV4cCI6MjA5MTIwNDk5OH0.HzkuDQ8Yi5rq5ZP95xx8oxC1GCNcUr1kGs5F-psu95I';
     supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -186,34 +187,45 @@
     window.onload = function() { refreshAllData(); };
 
     function refreshAllData() {
-        loadDashboardStats(); fetchStudentsList(); fetchInstructorsList(); fetchBatchesList(); fetchTicketsList();
+        loadDashboardStats(); 
+        fetchStudentsList(); 
+        fetchInstructorsList(); 
+        fetchBatchesList(); 
+        fetchDropoutsList(); 
+        fetchTicketsList(); // This will now run successfully!
     }
 
+    // Tab & Modal Logic
     function openTab(evt, tabId) {
         const contents = document.getElementsByClassName("tab-content");
         for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
         const btns = document.getElementsByClassName("tab-btn");
         for (let i = 0; i < btns.length; i++) btns[i].classList.remove("active");
         document.getElementById(tabId).classList.add("active");
-        evt.currentTarget.classList.add("active");
+        if(evt) evt.currentTarget.classList.add("active");
     }
 
     function openModal(modalId) { document.getElementById(modalId).style.display = "flex"; }
     function closeModal(modalId) { document.getElementById(modalId).style.display = "none"; }
     window.onclick = function(e) { if (e.target.classList.contains('modal')) e.target.style.display = "none"; }
 
+    // Dashboard Stats
     async function loadDashboardStats() {
         const { count: sCount } = await supabase.from('students').select('*', { count: 'exact', head: true }).eq('status', 'Active');
+        const { count: cCount } = await supabase.from('course_instructors').select('*', { count: 'exact', head: true });
         const { count: bCount } = await supabase.from('batches').select('*', { count: 'exact', head: true });
-        document.getElementById('totalStudents').innerText = sCount || 0;
-        document.getElementById('totalBatches').innerText = bCount || 0;
+        
+        if(document.getElementById('totalStudents')) document.getElementById('totalStudents').innerText = sCount || 0;
+        if(document.getElementById('totalCIs')) document.getElementById('totalCIs').innerText = cCount || 0;
+        if(document.getElementById('totalBatches')) document.getElementById('totalBatches').innerText = bCount || 0;
     }
 
-    // --- STUDENTS & TICKETS LOGIC ---
+    // ================= STUDENTS LOGIC =================
     async function fetchStudentsList() {
         const { data } = await supabase.from('students').select('*').order('created_at', { ascending: false });
         allStudentsData = data || [];
         const tbody = document.getElementById('studentTableBody');
+        if(!tbody) return;
         tbody.innerHTML = '';
         
         if (allStudentsData.length === 0) {
@@ -233,10 +245,10 @@
                 let actionHTML = '';
                 if(currentStatus !== 'Dropout') {
                     actionHTML = `
-                        <div class="action-cell-btns">
-                            <button style="background-color: #2f3c88; color: white;" onclick="enableLevelEdit('${s.id}', '${currentLevel}')">✏️ Edit Level</button>
-                            <button style="background-color: ${toggleBtnColor}; color: white;" onclick="toggleStudentStatus('${s.id}', '${currentStatus}')">⛔ ${toggleAction}</button>
-                            <button style="background-color: #f59e0b; color: white;" onclick="openRepeatModal('${s.unique_id}', '${s.first_name} ${s.last_name}', '${currentLevel}')">🔁 Repeat Request</button>
+                        <div class="action-cell-btns" id="action-cell-${s.id}">
+                            <button style="background-color: #2f3c88; color: white; padding: 5px 10px; border:none; border-radius:4px; cursor:pointer;" onclick="enableLevelEdit('${s.id}', '${currentLevel}')">✏️ Edit</button>
+                            <button style="background-color: ${toggleBtnColor}; color: white; padding: 5px 10px; border:none; border-radius:4px; cursor:pointer;" onclick="toggleStudentStatus('${s.id}', '${currentStatus}')">⛔ ${toggleAction}</button>
+                            <button style="background-color: #f59e0b; color: white; padding: 5px 10px; border:none; border-radius:4px; cursor:pointer;" onclick="openRepeatModal('${s.unique_id}', '${s.first_name} ${s.last_name}', '${currentLevel}')">🔁 Repeat</button>
                         </div>
                     `;
                 } else {
@@ -247,14 +259,215 @@
                     <td>${s.first_name} ${s.last_name}</td><td><b>${s.unique_id}</b></td><td>${s.dob || '-'}</td>
                     <td id="level-cell-${s.id}">${currentLevel}</td>
                     <td><span style="color: ${statusColor}; font-weight: bold;">${currentStatus}</span></td>
-                    <td id="action-cell-${s.id}">${actionHTML}</td>
+                    <td>${actionHTML}</td>
                 </tr>`;
             });
         }
-        loadDropoutStudentDropdown(); loadUnassignedStudents();
+        loadDropoutStudentDropdown(); 
+        loadUnassignedStudents();
     }
 
-    // --- NEW: TICKET SYSTEM LOGIC ---
+    async function registerStudent() {
+        const fName = document.getElementById('stuFirstName').value;
+        const lName = document.getElementById('stuLastName').value;
+        const dob = document.getElementById('stuDob').value;
+        if(!fName || !lName || !dob) { alert("First Name, Last Name, and DOB are required"); return; }
+
+        const prefix = `${fName.charAt(0).toLowerCase()}${lName.charAt(0).toLowerCase()}${new Date(dob).getDate().toString().padStart(2,'0')}${new Date(dob).getFullYear().toString().slice(-2)}`;
+        const { count } = await supabase.from('students').select('*', { count: 'exact', head: true }).like('unique_id', `${prefix}%`);
+        const uniqueId = `${prefix}${((count || 0) + 1).toString().padStart(4, '0')}`;
+
+        const { error } = await supabase.from('students').insert([{
+            first_name: fName, last_name: lName, dob: dob, unique_id: uniqueId,
+            gender: document.getElementById('stuGender').value,
+            standard: document.getElementById('stuStandard').value, 
+            school: document.getElementById('stuSchool').value,
+            father_name: document.getElementById('fatherName').value,
+            father_mobile: document.getElementById('fatherMobile').value,
+            mother_name: document.getElementById('motherName').value,
+            mother_mobile: document.getElementById('motherMobile').value,
+            status: 'Active'
+        }]);
+
+        if(!error) {
+            alert(`Registration successful! ID Generated: ${uniqueId}`);
+            closeModal('addStudentModal');
+            refreshAllData();
+        } else { alert("Failed to register student."); }
+    }
+
+    function enableLevelEdit(studentId, currentLevel) {
+        const levelCell = document.getElementById(`level-cell-${studentId}`);
+        const actionCell = document.getElementById(`action-cell-${studentId}`);
+        
+        let optionsHtml = '';
+        for(let i=0; i<=10; i++) {
+            const levelStr = `Level ${i}`;
+            const selected = (levelStr === currentLevel) ? 'selected' : '';
+            optionsHtml += `<option value="${levelStr}" ${selected}>${levelStr}</option>`;
+        }
+        
+        levelCell.innerHTML = `<select id="select-level-${studentId}" style="padding: 4px; border-radius: 4px;">${optionsHtml}</select>`;
+        actionCell.innerHTML = `
+            <button onclick="saveLevelEdit('${studentId}')" style="background-color: #28a745; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer;">💾 Save</button>
+            <button onclick="refreshAllData()" style="background-color: #6c757d; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer;">❌ Cancel</button>
+        `;
+    }
+
+    async function saveLevelEdit(studentId) {
+        const newLevel = document.getElementById(`select-level-${studentId}`).value;
+        const { error } = await supabase.from('students').update({ standard: newLevel }).eq('id', studentId);
+        if (error) { alert("Failed to update student level."); } 
+        else { refreshAllData(); }
+    }
+
+    async function toggleStudentStatus(studentId, currentStatus) {
+        const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
+        if(!confirm(`Mark this student as ${newStatus}?`)) return;
+        const { error } = await supabase.from('students').update({ status: newStatus }).eq('id', studentId);
+        if (!error) refreshAllData();
+    }
+
+    // ================= INSTRUCTORS LOGIC =================
+    async function fetchInstructorsList() {
+        const { data } = await supabase.from('course_instructors').select('*').order('created_at', { ascending: false });
+        const tbody = document.getElementById('ciTableBody');
+        const dropdown = document.getElementById('assignCi');
+        if(tbody) tbody.innerHTML = ''; 
+        if(dropdown) dropdown.innerHTML = '<option value="">Select Instructor</option>';
+
+        if (data && tbody) {
+            data.forEach(ci => {
+                tbody.innerHTML += `<tr><td>${ci.ci_name}</td><td><b>${ci.ci_code}</b></td><td>${ci.mobile || '-'}</td><td><span style="color: #28a745; font-weight: bold;">Active</span></td></tr>`;
+                if(dropdown) dropdown.innerHTML += `<option value="${ci.ci_code}">${ci.ci_name} (${ci.ci_code})</option>`;
+            });
+        }
+    }
+
+    async function addInstructor() {
+        const name = document.getElementById('ciName').value;
+        const code = document.getElementById('ciCode').value;
+        if(!name || !code) return;
+        const { error } = await supabase.from('course_instructors').insert([{ ci_name: name, ci_code: code, mobile: document.getElementById('ciMobile').value }]);
+        if(!error) { 
+            closeModal('addCiModal');
+            refreshAllData(); 
+        }
+    }
+
+    // ================= BATCH LOGIC =================
+    async function loadUnassignedStudents() {
+        const { data: assigned } = await supabase.from('student_batches').select('student_id');
+        const assignedIds = assigned ? assigned.map(a => a.student_id) : [];
+        const dropdown = document.getElementById('selectStudents');
+        if(!dropdown) return;
+        
+        dropdown.innerHTML = '';
+        let count = 0;
+        allStudentsData.forEach(s => {
+            if (!assignedIds.includes(s.unique_id) && s.status === 'Active') {
+                dropdown.innerHTML += `<option value="${s.unique_id}">${s.first_name} ${s.last_name} (${s.unique_id})</option>`;
+                count++;
+            }
+        });
+        if (count === 0) dropdown.innerHTML = '<option value="" disabled>No eligible active students available.</option>';
+    }
+
+    async function fetchBatchesList() {
+        const { data: batches } = await supabase.from('batches').select('*').order('created_at', { ascending: false });
+        const { data: enrollments } = await supabase.from('student_batches').select('*');
+        const tbody = document.getElementById('batchTableBody');
+        if(!tbody) return;
+        
+        tbody.innerHTML = '';
+        if (batches) {
+            batches.forEach(b => {
+                let studentCount = enrollments ? enrollments.filter(e => e.batch_id === b.id).length : 0;
+                tbody.innerHTML += `<tr><td><b>${b.level}</b></td><td>${b.batch_day} at ${b.batch_time}</td><td>${b.ci_id}</td><td>${studentCount} Enrolled</td><td><span style="color: #28a745; font-weight: bold;">Active</span></td></tr>`;
+            });
+        }
+    }
+
+    async function createBatch() {
+        const selectElem = document.getElementById('selectStudents');
+        if(!selectElem) return;
+        const selectedStudents = Array.from(selectElem.selectedOptions).map(option => option.value);
+        if (selectedStudents.length === 0 || selectedStudents[0] === "") return;
+        
+        const day = document.getElementById('batchDay').value; 
+        const time = document.getElementById('batchTime').value;
+        const level = document.getElementById('batchLevel').value; 
+        const ci = document.getElementById('assignCi').value;
+        if(!day || !time || !level || !ci) return;
+        
+        const { data: batchData, error: batchError } = await supabase.from('batches').insert([{ batch_day: day, batch_time: time, level: level, ci_id: ci }]).select();
+        if (batchError) return;
+
+        const enrollmentData = selectedStudents.map(sId => ({ student_id: sId, batch_id: batchData[0].id }));
+        const { error: enrollError } = await supabase.from('student_batches').insert(enrollmentData);
+
+        if (!enrollError) {
+            closeModal('addBatchModal');
+            refreshAllData();
+        }
+    }
+
+    // ================= DROPOUTS LOGIC =================
+    function loadDropoutStudentDropdown() {
+        const dropdown = document.getElementById('dropoutStudent');
+        if(!dropdown) return;
+        dropdown.innerHTML = '<option value="">Select a Student</option>';
+        allStudentsData.forEach(s => {
+            if(s.status !== 'Dropout') dropdown.innerHTML += `<option value="${s.unique_id}">${s.first_name} ${s.last_name}</option>`;
+        });
+    }
+
+    function autoFillDropoutLevel() {
+        const selectedId = document.getElementById('dropoutStudent').value;
+        const student = allStudentsData.find(s => s.unique_id === selectedId);
+        if(document.getElementById('dropoutLevel')) {
+            document.getElementById('dropoutLevel').value = student ? (student.standard || 'Level 0') : '';
+        }
+    }
+
+    function toggleOtherReason() {
+        const reason = document.getElementById('dropoutReason').value;
+        const otherDiv = document.getElementById('otherReasonDiv');
+        if(!otherDiv) return;
+        if(reason === 'Other') otherDiv.style.display = 'block';
+        else { otherDiv.style.display = 'none'; document.getElementById('dropoutOtherReason').value = ''; }
+    }
+
+    async function fetchDropoutsList() {
+        const { data } = await supabase.from('dropouts').select('*').order('created_at', { ascending: false });
+        const tbody = document.getElementById('dropoutTableBody');
+        if(!tbody) return;
+        tbody.innerHTML = '';
+        if (data) {
+            data.forEach(d => {
+                tbody.innerHTML += `<tr><td><b>${d.student_id}</b></td><td>${d.level}</td><td><span style="color: #dc3545; font-weight: bold;">${d.reason}</span></td><td>${d.other_reason || '-'}</td><td>${new Date(d.created_at).toLocaleDateString()}</td></tr>`;
+            });
+        }
+    }
+
+    async function recordDropout() {
+        const studentId = document.getElementById('dropoutStudent').value;
+        const level = document.getElementById('dropoutLevel').value;
+        const reason = document.getElementById('dropoutReason').value;
+        const otherReason = document.getElementById('dropoutOtherReason').value;
+
+        if(!studentId || !reason) return;
+        if(reason === 'Other' && !otherReason) return;
+
+        const { error: dropError } = await supabase.from('dropouts').insert([{ student_id: studentId, level: level, reason: reason, other_reason: reason === 'Other' ? otherReason : '' }]);
+        if (dropError) return;
+
+        await supabase.from('students').update({ status: 'Dropout' }).eq('unique_id', studentId);
+        alert("Student marked as Dropout.");
+        refreshAllData();
+    }
+
+    // ================= TICKETS LOGIC =================
     function openRepeatModal(id, name, level) {
         document.getElementById('repeatStudentId').value = id;
         document.getElementById('repeatStudentName').value = name;
@@ -269,69 +482,33 @@
         const level = document.getElementById('repeatStudentLevel').value;
         const reason = document.getElementById('repeatReason').value;
 
-        if(!reason) { alert("Please provide a reason for the Master Franchise to review."); return; }
+        if(!reason) { alert("Please provide a reason."); return; }
 
-        const { error } = await supabase.from('level_repeats').insert([{
-            student_id: id, student_name: name, level_to_repeat: level, reason: reason, status: 'Pending'
-        }]);
+        const { error } = await supabase.from('level_repeats').insert([{ student_id: id, student_name: name, level_to_repeat: level, reason: reason, status: 'Pending' }]);
 
         if(!error) {
-            alert("Ticket submitted successfully! Check the Support Tickets tab for updates.");
+            alert("Ticket submitted successfully!");
             closeModal('requestRepeatModal');
             fetchTicketsList();
-        } else {
-            alert("Failed to submit ticket.");
         }
     }
 
     async function fetchTicketsList() {
         const { data } = await supabase.from('level_repeats').select('*').order('created_at', { ascending: false });
         const tbody = document.getElementById('ticketTableBody');
+        if(!tbody) return;
+        
         tbody.innerHTML = '';
-
-        if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No tickets generated.</td></tr>';
-        } else {
+        if (data && data.length > 0) {
             data.forEach(t => {
-                let badgeColor = '#f59e0b'; // Pending Yellow
-                if(t.status === 'Approved') badgeColor = '#28a745'; // Green
-                if(t.status === 'Rejected') badgeColor = '#dc3545'; // Red
-                
-                tbody.innerHTML += `<tr>
-                    <td>${new Date(t.created_at).toLocaleDateString()}</td>
-                    <td><b>${t.student_name}</b><br><span style="font-size:0.8em;color:#666;">${t.student_id}</span></td>
-                    <td>${t.level_to_repeat}</td>
-                    <td>${t.reason}</td>
-                    <td><span style="background-color:${badgeColor}; color:white; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:0.85em;">${t.status}</span></td>
-                </tr>`;
+                let badgeColor = '#f59e0b'; 
+                if(t.status === 'Approved') badgeColor = '#28a745'; 
+                if(t.status === 'Rejected') badgeColor = '#dc3545';
+                tbody.innerHTML += `<tr><td>${new Date(t.created_at).toLocaleDateString()}</td><td><b>${t.student_name}</b><br><span style="font-size:0.8em;color:#666;">${t.student_id}</span></td><td>${t.level_to_repeat}</td><td>${t.reason}</td><td><span style="background-color:${badgeColor}; color:white; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:0.85em;">${t.status}</span></td></tr>`;
             });
+        } else {
+             tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No tickets generated.</td></tr>`;
         }
-    }
-
-    /* Include existing functions for toggleStudentStatus, saveLevelEdit, registerStudent, fetchInstructorsList, addInstructor, loadUnassignedStudents, fetchBatchesList, createBatch, recordDropout... (Kept identical to previous steps for brevity, ensure they are copied from above if rewriting) */
-    
-    async function toggleStudentStatus(studentId, currentStatus) {
-        const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
-        if(!confirm(`Mark this student as ${newStatus}?`)) return;
-        const { error } = await supabase.from('students').update({ status: newStatus }).eq('id', studentId);
-        if (!error) refreshAllData();
-    }
-    
-    function loadDropoutStudentDropdown() {
-        const dropdown = document.getElementById('dropoutStudent');
-        dropdown.innerHTML = '<option value="">Select a Student</option>';
-        allStudentsData.forEach(s => {
-            if(s.status !== 'Dropout') dropdown.innerHTML += `<option value="${s.unique_id}">${s.first_name} ${s.last_name}</option>`;
-        });
-    }
-
-    async function recordDropout() {
-        const studentId = document.getElementById('dropoutStudent').value;
-        const reason = document.getElementById('dropoutReason').value;
-        if(!studentId || !reason) return;
-        await supabase.from('students').update({ status: 'Dropout' }).eq('unique_id', studentId);
-        alert("Student marked as Dropout.");
-        refreshAllData();
     }
 </script>
 </body>
