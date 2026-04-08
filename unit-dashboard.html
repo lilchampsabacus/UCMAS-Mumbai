@@ -297,9 +297,20 @@
     const supabaseUrl = 'https://jugzuutcnxcipoyawhbq.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1Z3p1dXRjbnhjaXBveWF3aGJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mjg5OTgsImV4cCI6MjA5MTIwNDk5OH0.HzkuDQ8Yi5rq5ZP95xx8oxC1GCNcUr1kGs5F-psu95I';
     supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    
     let allStudentsData = [];
+    let currentUser = null; // NEW: Store the logged-in UF
 
-    window.onload = function() { refreshAllData(); };
+    window.onload = async function() { 
+        // NEW: Authenticate and get the current UF's ID
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error || !user) {
+            window.location.href = 'index.html'; // Kick them to login if not authenticated
+            return;
+        }
+        currentUser = user;
+        refreshAllData(); 
+    };
 
     function refreshAllData() {
         loadDashboardStats(); 
@@ -324,9 +335,10 @@
     window.onclick = function(e) { if (e.target.classList.contains('modal')) e.target.style.display = "none"; }
 
     async function loadDashboardStats() {
-        const { count: sCount } = await supabase.from('students').select('*', { count: 'exact', head: true }).eq('status', 'Active');
-        const { count: cCount } = await supabase.from('course_instructors').select('*', { count: 'exact', head: true });
-        const { count: bCount } = await supabase.from('batches').select('*', { count: 'exact', head: true }).eq('status', 'Active');
+        // NEW: Filter stats by created_by
+        const { count: sCount } = await supabase.from('students').select('*', { count: 'exact', head: true }).eq('status', 'Active').eq('created_by', currentUser.id);
+        const { count: cCount } = await supabase.from('course_instructors').select('*', { count: 'exact', head: true }).eq('created_by', currentUser.id);
+        const { count: bCount } = await supabase.from('batches').select('*', { count: 'exact', head: true }).eq('status', 'Active').eq('created_by', currentUser.id);
         
         if(document.getElementById('totalStudents')) document.getElementById('totalStudents').innerText = sCount || 0;
         if(document.getElementById('totalCIs')) document.getElementById('totalCIs').innerText = cCount || 0;
@@ -335,7 +347,8 @@
 
     // ================= STUDENTS LOGIC =================
     async function fetchStudentsList() {
-        const { data } = await supabase.from('students').select('*').order('created_at', { ascending: false });
+        // NEW: Filter students by created_by
+        const { data } = await supabase.from('students').select('*').eq('created_by', currentUser.id).order('created_at', { ascending: false });
         allStudentsData = data || [];
         const tbody = document.getElementById('studentTableBody');
         if(!tbody) return;
@@ -386,9 +399,12 @@
         if(!fName || !lName || !dob) { alert("First Name, Last Name, and DOB are required"); return; }
 
         const prefix = `${fName.charAt(0).toLowerCase()}${lName.charAt(0).toLowerCase()}${new Date(dob).getDate().toString().padStart(2,'0')}${new Date(dob).getFullYear().toString().slice(-2)}`;
-        const { count } = await supabase.from('students').select('*', { count: 'exact', head: true }).like('unique_id', `${prefix}%`);
+        
+        // Ensure ID count generation is also isolated to this specific UF (optional, but good practice)
+        const { count } = await supabase.from('students').select('*', { count: 'exact', head: true }).eq('created_by', currentUser.id).like('unique_id', `${prefix}%`);
         const uniqueId = `${prefix}${((count || 0) + 1).toString().padStart(4, '0')}`;
 
+        // NEW: Inject created_by into the insert
         const { error } = await supabase.from('students').insert([{
             first_name: fName, last_name: lName, dob: dob, unique_id: uniqueId,
             gender: document.getElementById('stuGender').value,
@@ -398,7 +414,8 @@
             father_mobile: document.getElementById('fatherMobile').value,
             mother_name: document.getElementById('motherName').value,
             mother_mobile: document.getElementById('motherMobile').value,
-            status: 'Active'
+            status: 'Active',
+            created_by: currentUser.id
         }]);
 
         if(!error) {
@@ -442,7 +459,8 @@
 
     // ================= INSTRUCTORS LOGIC =================
     async function fetchInstructorsList() {
-        const { data } = await supabase.from('course_instructors').select('*').order('created_at', { ascending: false });
+        // NEW: Filter by created_by
+        const { data } = await supabase.from('course_instructors').select('*').eq('created_by', currentUser.id).order('created_at', { ascending: false });
         const tbody = document.getElementById('ciTableBody');
         const dropdown = document.getElementById('assignCi');
         if(tbody) tbody.innerHTML = ''; 
@@ -460,15 +478,19 @@
         const name = document.getElementById('ciName').value;
         const code = document.getElementById('ciCode').value;
         if(!name || !code) return;
-        const { error } = await supabase.from('course_instructors').insert([{ ci_name: name, ci_code: code, mobile: document.getElementById('ciMobile').value }]);
+        
+        // NEW: Inject created_by
+        const { error } = await supabase.from('course_instructors').insert([{ 
+            ci_name: name, ci_code: code, mobile: document.getElementById('ciMobile').value,
+            created_by: currentUser.id
+        }]);
+        
         if(!error) { closeModal('addCiModal'); refreshAllData(); }
     }
 
-    // ================= NEW BATCH LOGIC (TIMELINE & FILTERING) =================
-    
-    // Helper function to ONLY get students who are in an ACTIVE batch
+    // ================= BATCH LOGIC =================
     async function getActiveAssignedStudentIds() {
-        const { data: activeBatches } = await supabase.from('batches').select('id').eq('status', 'Active');
+        const { data: activeBatches } = await supabase.from('batches').select('id').eq('status', 'Active').eq('created_by', currentUser.id);
         if (!activeBatches || activeBatches.length === 0) return [];
         
         const activeBatchIds = activeBatches.map(b => b.id);
@@ -496,13 +518,10 @@
             return;
         }
 
-        // Only pull IDs of students who are currently locked in an active batch
         const assignedIds = await getActiveAssignedStudentIds();
-        
         let count = 0;
         allStudentsData.forEach(s => {
             const sLevel = s.standard || 'Level 0';
-            // Student must NOT be in an active batch, must be Active status, and match the selected level
             if (!assignedIds.includes(s.unique_id) && s.status === 'Active' && sLevel === selectedLevel) {
                 dropdown.innerHTML += `<option value="${s.unique_id}">${s.first_name} ${s.last_name} (${s.unique_id})</option>`;
                 count++;
@@ -513,25 +532,22 @@
     }
 
     async function fetchBatchesList() {
-        const { data: batches } = await supabase.from('batches').select('*').order('created_at', { ascending: false });
-        const { data: enrollments } = await supabase.from('student_batches').select('*');
+        // NEW: Filter by created_by
+        const { data: batches } = await supabase.from('batches').select('*').eq('created_by', currentUser.id).order('created_at', { ascending: false });
+        const { data: enrollments } = await supabase.from('student_batches').select('*'); // This joins fine as batches are filtered
         const tbody = document.getElementById('batchTableBody');
         if(!tbody) return;
         
         tbody.innerHTML = '';
         if (batches) {
             const today = new Date();
-            
             batches.forEach(b => {
                 let studentCount = enrollments ? enrollments.filter(e => e.batch_id === b.id).length : 0;
-                
                 let dateDisplay = `<div style="font-size:0.85em; color:#666;">Start: ${b.start_date || 'N/A'}<br>End: ${b.expected_end_date || 'N/A'}</div>`;
                 
                 if (b.status === 'Active' && b.expected_end_date) {
                     const expDate = new Date(b.expected_end_date);
-                    if (expDate < today) {
-                        dateDisplay += `<div style="color: #dc3545; font-size: 0.8em; font-weight: bold; margin-top:4px;">⚠️ Overdue</div>`;
-                    }
+                    if (expDate < today) dateDisplay += `<div style="color: #dc3545; font-size: 0.8em; font-weight: bold; margin-top:4px;">⚠️ Overdue</div>`;
                 } else if (b.status === 'Completed') {
                     dateDisplay += `<div style="color: #28a745; font-size: 0.8em; font-weight: bold; margin-top:4px;">✅ Completed on ${b.actual_end_date}</div>`;
                 }
@@ -607,15 +623,15 @@
         const expectedEndDate = new Date(startDate);
         expectedEndDate.setMonth(expectedEndDate.getMonth() + durationVal);
         
-        if(holidayExtensionDays > 0) {
-            expectedEndDate.setDate(expectedEndDate.getDate() + holidayExtensionDays);
-        }
+        if(holidayExtensionDays > 0) expectedEndDate.setDate(expectedEndDate.getDate() + holidayExtensionDays);
         
         const expectedEndDateStr = expectedEndDate.toISOString().split('T')[0];
 
+        // NEW: Inject created_by
         const { data: batchData, error: batchError } = await supabase.from('batches').insert([{ 
             batch_day: day, batch_time: time, level: level, ci_id: ci, 
-            start_date: startDateVal, expected_end_date: expectedEndDateStr, status: 'Active' 
+            start_date: startDateVal, expected_end_date: expectedEndDateStr, status: 'Active',
+            created_by: currentUser.id
         }]).select();
         
         if (batchError) return;
@@ -661,7 +677,8 @@
     }
 
     async function fetchDropoutsList() {
-        const { data } = await supabase.from('dropouts').select('*').order('created_at', { ascending: false });
+        // NEW: Filter by created_by
+        const { data } = await supabase.from('dropouts').select('*').eq('created_by', currentUser.id).order('created_at', { ascending: false });
         const tbody = document.getElementById('dropoutTableBody');
         if(!tbody) return;
         tbody.innerHTML = '';
@@ -681,7 +698,11 @@
         if(!studentId || !reason) return;
         if(reason === 'Other' && !otherReason) return;
 
-        const { error: dropError } = await supabase.from('dropouts').insert([{ student_id: studentId, level: level, reason: reason, other_reason: reason === 'Other' ? otherReason : '' }]);
+        // NEW: Inject created_by
+        const { error: dropError } = await supabase.from('dropouts').insert([{ 
+            student_id: studentId, level: level, reason: reason, other_reason: reason === 'Other' ? otherReason : '',
+            created_by: currentUser.id
+        }]);
         if (dropError) return;
 
         await supabase.from('students').update({ status: 'Dropout' }).eq('unique_id', studentId);
@@ -705,13 +726,19 @@
         const reason = document.getElementById('repeatReason').value;
 
         if(!reason) { alert("Please provide a reason."); return; }
-        const { error } = await supabase.from('level_repeats').insert([{ student_id: id, student_name: name, level_to_repeat: level, reason: reason, status: 'Pending' }]);
+        
+        // NEW: Inject created_by
+        const { error } = await supabase.from('level_repeats').insert([{ 
+            student_id: id, student_name: name, level_to_repeat: level, reason: reason, status: 'Pending',
+            created_by: currentUser.id
+        }]);
 
         if(!error) { alert("Ticket submitted successfully!"); closeModal('requestRepeatModal'); fetchTicketsList(); }
     }
 
     async function fetchTicketsList() {
-        const { data } = await supabase.from('level_repeats').select('*').order('created_at', { ascending: false });
+        // NEW: Filter by created_by
+        const { data } = await supabase.from('level_repeats').select('*').eq('created_by', currentUser.id).order('created_at', { ascending: false });
         const tbody = document.getElementById('ticketTableBody');
         if(!tbody) return;
         tbody.innerHTML = '';
@@ -722,6 +749,7 @@
             });
         } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No tickets generated.</td></tr>`; }
     }
+</script>
 </script>
 </body>
 </html>
