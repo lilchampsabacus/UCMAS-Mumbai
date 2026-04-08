@@ -37,13 +37,12 @@
             box-sizing: border-box;
         }
         
-        /* New styles for the password toggle */
         .password-container {
             position: relative;
             width: 100%;
         }
         .password-container input {
-            padding-right: 40px; /* Make room for the icon */
+            padding-right: 40px; 
         }
         .toggle-password {
             position: absolute;
@@ -100,10 +99,10 @@
         
         if (passwordInput.type === 'password') {
             passwordInput.type = 'text';
-            toggleIcon.textContent = '🙈'; // Change icon to hidden
+            toggleIcon.textContent = '🙈'; 
         } else {
             passwordInput.type = 'password';
-            toggleIcon.textContent = '👁️'; // Change icon back to visible
+            toggleIcon.textContent = '👁️'; 
         }
     }
 
