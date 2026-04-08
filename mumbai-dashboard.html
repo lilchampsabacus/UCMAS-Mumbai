@@ -205,7 +205,6 @@
     window.onload = fetchDashboardData;
 
     async function fetchDashboardData() {
-        // Fetch rows from the new database table
         const { data, error } = await supabase.from('unit_franchises').select('*').order('created_at', { ascending: false });
         
         if (error) {
@@ -213,10 +212,8 @@
             return;
         }
 
-        // Update the dashboard counter
         document.getElementById('totalUf').innerText = data.length;
 
-        // Clear the table and populate it with real data
         const tbody = document.getElementById('ufTableBody');
         tbody.innerHTML = ''; 
 
@@ -231,7 +228,8 @@
                 <td>${uf.uf_name}</td>
                 <td>${uf.uf_code}</td>
                 <td>${uf.area}</td>
-                <td>0</td> <td><span style="color: #28a745; font-weight: bold;">${uf.status}</span></td>
+                <td>0</td> 
+                <td><span style="color: #28a745; font-weight: bold;">${uf.status}</span></td>
                 <td><button class="btn btn-toggle btn-disable">Disable</button></td>
             `;
             tbody.appendChild(tr);
@@ -257,7 +255,6 @@
         btn.innerText = "Creating...";
 
         try {
-            // 1. Create the user authentication
             const { error: authError } = await supabase.auth.signUp({
                 email: generatedEmail,
                 password: generatedPassword,
@@ -272,7 +269,6 @@
                 return;
             }
 
-            // 2. Save the details to our new database table
             const { error: dbError } = await supabase.from('unit_franchises').insert([
                 { uf_name: name, uf_code: code, area: area, email: generatedEmail }
             ]);
@@ -285,9 +281,8 @@
             alert(`Franchise created successfully!\n\nLogin Email: ${generatedEmail}\nDefault Password: ${generatedPassword}`);
             
             closeModal();
-            fetchDashboardData(); // Automatically refresh the table!
+            fetchDashboardData(); 
             
-            // Clear fields
             document.getElementById('newUfName').value = '';
             document.getElementById('newUfCode').value = '';
             document.getElementById('newUfArea').value = '';
