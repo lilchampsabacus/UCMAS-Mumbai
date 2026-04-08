@@ -11,12 +11,14 @@
         .header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-radius: 0 0 16px 16px; margin-bottom: 30px; color: #2f3c88; }
         .header a { color: #2f3c88; text-decoration: none; font-weight: bold; margin-left: 20px;}
         .container { padding: 0 40px; max-width: 1300px; margin: auto; }
+        
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
         .stat-card { background: rgba(255, 255, 255, 0.95); padding: 20px; text-align: left; color: #2f3c88; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 5px solid #f95d6a; }
         .stat-card:nth-child(2) { border-left-color: #f59e0b; }
         .stat-card:nth-child(3) { border-left-color: #2f3c88; }
         .stat-card h3 { margin: 0 0 5px 0; font-size: 0.85em; opacity: 0.7; font-weight: bold; text-transform: uppercase;}
         .stat-card h2 { margin: 0; font-size: 2.2em; font-weight: bold; color: #111; }
+        
         .tab-bar { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(255, 255, 255, 0.95); padding: 12px 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); align-items: center; flex-wrap: wrap; }
         .tab-btn, .tab-link { background: transparent; border: none; padding: 10px 20px; font-size: 0.95em; font-weight: bold; color: #6b7280; cursor: pointer; border-radius: 8px; transition: 0.3s; text-decoration: none; display: flex; align-items: center; gap: 8px; }
         .tab-btn:hover, .tab-link:hover { background: rgba(47, 60, 136, 0.08); color: #2f3c88; }
@@ -24,6 +26,7 @@
         .tab-content { display: none; animation: fadeIn 0.4s ease-in-out; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
         .form-section { background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.05); }
         h3 { border-bottom: 2px solid rgba(47, 60, 136, 0.1); padding-bottom: 10px; color: #2f3c88; margin-top: 0;}
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -31,18 +34,22 @@
         select[multiple] { height: 160px; }
         button.action-btn { background-color: #f95d6a; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 20px; padding: 12px; border-radius: 8px; font-size: 1.05em; transition: 0.3s; width: 100%; }
         button.action-btn.blue { background-color: #2f3c88; }
+        
         table { width: 100%; border-collapse: collapse; overflow: hidden; color: #333; background: rgba(255,255,255,0.7); border-radius: 12px;}
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(0, 0, 0, 0.1); }
         th { background-color: rgba(47, 60, 136, 0.1); font-weight: 600; color: #2f3c88; }
         tr:hover { background-color: rgba(255, 255, 255, 0.5); }
+        
         .wide-add-btn { background-color: #2f3c88; color: white; border: none; font-weight: bold; cursor: pointer; padding: 12px; border-radius: 8px; font-size: 1em; width: 100%; margin-bottom: 15px; transition: 0.3s; }
         .wide-add-btn:hover { background-color: #1f285e; }
+        
         .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); backdrop-filter: blur(5px); align-items: center; justify-content: center; }
-        .modal-content { padding: 30px; width: 100%; max-width: 600px; color: #2f3c88; background: rgba(255, 255, 255, 0.95); border-radius: 12px; }
+        .modal-content { padding: 30px; width: 100%; max-width: 600px; color: #2f3c88; background: rgba(255, 255, 255, 0.95); border-radius: 12px; max-height: 80vh; overflow-y: auto;}
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;}
         .btn-cancel { background: #ccc; color: #333; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;}
-        .edit-select { width: 120px; padding: 6px; font-size: 0.9em; }
-        .action-cell-btns button { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; font-weight: bold; margin-bottom: 5px; margin-right: 5px;}
+        
+        .action-cell-btns button { padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85em; font-weight: bold; margin-bottom: 5px; margin-right: 5px; transition: opacity 0.2s; }
+        .action-cell-btns button:hover { opacity: 0.8; }
     </style>
 </head>
 <body>
@@ -93,10 +100,10 @@
     <div id="tab-batches" class="tab-content">
         <div class="glass-panel" style="margin-bottom: 50px; padding: 20px;">
              <h3 style="border-bottom: none; margin-top: 0;">Batch Directory</h3>
-             <button class="wide-add-btn" onclick="openModal('addBatchModal')">➕ Create Batch</button>
+             <button class="wide-add-btn" onclick="openCreateBatchModal()">➕ Create Batch</button>
             <table>
-                <thead><tr><th>Level</th><th>Schedule</th><th>Instructor Code</th><th>Enrolled Students</th><th>Status</th></tr></thead>
-                <tbody id="batchTableBody"><tr><td colspan="5" style="text-align: center;">Loading batches...</td></tr></tbody>
+                <thead><tr><th>Level</th><th>Schedule</th><th>Instructor Code</th><th>Enrolled Students</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="batchTableBody"><tr><td colspan="6" style="text-align: center;">Loading batches...</td></tr></tbody>
             </table>
         </div>
     </div>
@@ -128,6 +135,13 @@
             </div>
             <button class="action-btn blue" onclick="recordDropout()">Mark as Dropout</button>
         </div>
+        <div class="glass-panel" style="margin-bottom: 50px; padding: 20px;">
+            <h3 style="border-bottom: none; margin-top: 0;">Dropout Directory</h3>
+            <table>
+                <thead><tr><th>Student ID</th><th>Level</th><th>Reason</th><th>Specifics</th><th>Date Recorded</th></tr></thead>
+                <tbody id="dropoutTableBody"><tr><td colspan="5" style="text-align: center;">Loading dropouts...</td></tr></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="tab-tickets" class="tab-content">
@@ -142,69 +156,113 @@
     </div>
 </div>
 
-<div id="addStudentModal" class="modal"><div class="modal-content"><h3>Add New Student</h3><div class="grid-2"><input type="text" id="stuFirstName" placeholder="Student First Name"><input type="text" id="stuLastName" placeholder="Student Last Name"><input type="date" id="stuDob"><select id="stuGender"><option value="">Select Gender</option><option value="Male">Male</option><option value="Female">Female</option></select><select id="stuStandard">
-    <option value="">Select Starting Level</option>
-    <option value="Level 0">Level 0</option>
-    <option value="Level 1">Level 1</option>
-    <option value="Level 2">Level 2</option>
-    <option value="Level 3">Level 3</option>
-    <option value="Level 4">Level 4</option>
-    <option value="Level 5">Level 5</option>
-    <option value="Level 6">Level 6</option>
-    <option value="Level 7">Level 7</option>
-    <option value="Level 8">Level 8</option>
-    <option value="Level 9">Level 9</option>
-    <option value="Level 10">Level 10</option>
-</select><input type="text" id="stuSchool" placeholder="School Name"><input type="text" id="fatherName" placeholder="Father's Name"><input type="tel" id="fatherMobile" placeholder="Father's Mobile"><input type="text" id="motherName" placeholder="Mother's Name"><input type="tel" id="motherMobile" placeholder="Mother's Mobile"></div><div class="modal-actions"><button class="btn-cancel" onclick="closeModal('addStudentModal')">Cancel</button><button class="action-btn blue" style="width: auto; margin-top: 0;" onclick="registerStudent()">Register</button></div></div></div>
+<div id="addStudentModal" class="modal">
+    <div class="modal-content">
+        <h3>Add New Student</h3>
+        <div class="grid-2">
+            <input type="text" id="stuFirstName" placeholder="Student First Name">
+            <input type="text" id="stuLastName" placeholder="Student Last Name">
+            <input type="date" id="stuDob">
+            <select id="stuGender"><option value="">Select Gender</option><option value="Male">Male</option><option value="Female">Female</option></select>
+            <select id="stuStandard">
+                <option value="">Select Starting Level</option>
+                <option value="Level 0">Level 0</option><option value="Level 1">Level 1</option>
+                <option value="Level 2">Level 2</option><option value="Level 3">Level 3</option>
+                <option value="Level 4">Level 4</option><option value="Level 5">Level 5</option>
+                <option value="Level 6">Level 6</option><option value="Level 7">Level 7</option>
+                <option value="Level 8">Level 8</option><option value="Level 9">Level 9</option>
+                <option value="Level 10">Level 10</option>
+            </select>
+            <input type="text" id="stuSchool" placeholder="School Name">
+            <input type="text" id="fatherName" placeholder="Father's Name">
+            <input type="tel" id="fatherMobile" placeholder="Father's Mobile">
+            <input type="text" id="motherName" placeholder="Mother's Name">
+            <input type="tel" id="motherMobile" placeholder="Mother's Mobile">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeModal('addStudentModal')">Cancel</button>
+            <button class="action-btn blue" style="width: auto; margin-top: 0;" onclick="registerStudent()">Register</button>
+        </div>
+    </div>
+</div>
 
-<div id="addCiModal" class="modal"><div class="modal-content"><h3>Add Course Instructor</h3><div class="grid-2"><input type="text" id="ciName" placeholder="Instructor Name"><input type="text" id="ciCode" placeholder="Instructor Code"><input type="tel" id="ciMobile" placeholder="Mobile Number" style="grid-column: span 2;"></div><div class="modal-actions"><button class="btn-cancel" onclick="closeModal('addCiModal')">Cancel</button><button class="action-btn blue" style="width: auto; margin-top: 0;" onclick="addInstructor()">Save</button></div></div></div>
+<div id="addCiModal" class="modal">
+    <div class="modal-content">
+        <h3>Add Course Instructor</h3>
+        <div class="grid-2">
+            <input type="text" id="ciName" placeholder="Instructor Name">
+            <input type="text" id="ciCode" placeholder="Instructor Code">
+            <input type="tel" id="ciMobile" placeholder="Mobile Number" style="grid-column: span 2;">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeModal('addCiModal')">Cancel</button>
+            <button class="action-btn blue" style="width: auto; margin-top: 0;" onclick="addInstructor()">Save</button>
+        </div>
+    </div>
+</div>
 
-<div id="addBatchModal" class="modal"><div class="modal-content"><h3>Create Batch</h3><div class="grid-2"><div><label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Assign Instructor</label><select id="assignCi"><option value="">Loading...</option></select><label style="display:block; margin:15px 0 5px; font-weight:bold; color:#2f3c88;">Batch Details</label><select id="batchDay"><option value="">Select Day</option>
-    <option value="Monday">Monday</option>
-    <option value="Tuesday">Tuesday</option>
-    <option value="Wednesday">Wednesday </option>
-    <option value="Thursday">Thursday</option>
-    <option value="Friday">Friday</option>
-    <option value="Saturday">Saturday</option>
-    <option value="Sunday">Sunday</option>
-</select><input type="time" id="batchTime" style="margin-top:10px;"><select id="batchLevel" style="margin-top:10px;"><option value="">Select Level</option>
-    <option value="Level 0">Level 0</option>
-    <option value="Level 1">Level 1</option>
-    <option value="Level 2">Level 2</option>
-    <option value="Level 3">Level 3</option>
-    <option value="Level 4">Level 4</option>
-    <option value="Level 5">Level 5</option>
-    <option value="Level 6">Level 6</option>
-    <option value="Level 7">Level 7</option>
-    <option value="Level 9">Level 8</option>
-    <option value="Level 10">Level 10</option>
-</select></div><div><label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Select Students</label><select id="selectStudents" multiple><option value="">Loading...</option></select></div></div><div class="modal-actions"><button class="btn-cancel" onclick="closeModal('addBatchModal')">Cancel</button><button class="action-btn blue" style="width: auto; margin-top: 0;" onclick="createBatch()">Create Batch</button></div></div></div>
+<div id="addBatchModal" class="modal">
+    <div class="modal-content">
+        <h3>Create Batch</h3>
+        <div class="grid-2">
+            <div>
+                <label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Assign Instructor</label>
+                <select id="assignCi"><option value="">Loading...</option></select>
+                <label style="display:block; margin:15px 0 5px; font-weight:bold; color:#2f3c88;">Batch Details</label>
+                <select id="batchDay">
+                    <option value="">Select Day</option><option value="Monday">Monday</option><option value="Tuesday">Tuesday</option><option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option><option value="Friday">Friday</option><option value="Saturday">Saturday</option><option value="Sunday">Sunday</option>
+                </select>
+                <input type="time" id="batchTime" style="margin-top:10px;">
+                <select id="batchLevel" style="margin-top:10px;" onchange="filterStudentsForBatch()">
+                    <option value="">Select Level First</option>
+                    <option value="Level 0">Level 0</option><option value="Level 1">Level 1</option><option value="Level 2">Level 2</option><option value="Level 3">Level 3</option><option value="Level 4">Level 4</option><option value="Level 5">Level 5</option><option value="Level 6">Level 6</option><option value="Level 7">Level 7</option><option value="Level 8">Level 8</option><option value="Level 9">Level 9</option><option value="Level 10">Level 10</option>
+                </select>
+            </div>
+            <div>
+                <label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Select Students</label>
+                <select id="selectStudents" multiple>
+                    <option value="" disabled>Select a batch level first...</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeModal('addBatchModal')">Cancel</button>
+            <button class="action-btn blue" style="width: auto; margin-top: 0;" onclick="createBatch()">Create Batch</button>
+        </div>
+    </div>
+</div>
 
 <div id="requestRepeatModal" class="modal">
     <div class="modal-content">
         <h3>Request Level Repeat</h3>
         <p style="color: #666; font-size: 0.9em;">Send a ticket to the Master Franchise to allow this student to repeat their current level.</p>
-        
         <input type="hidden" id="repeatStudentId">
-        
         <div class="form-group" style="margin-bottom: 15px;">
             <label style="font-weight: bold;">Student Name</label>
             <input type="text" id="repeatStudentName" readonly style="background: #f8f9fa;">
         </div>
-        
         <div class="form-group" style="margin-bottom: 15px;">
             <label style="font-weight: bold;">Level to Repeat</label>
             <input type="text" id="repeatStudentLevel" readonly style="background: #f8f9fa;">
         </div>
-
         <div class="form-group" style="margin-bottom: 15px;">
             <label style="font-weight: bold;">Reason for Repeat</label>
             <textarea id="repeatReason" rows="3" placeholder="e.g. Scored less marks in recent evaluation, needs more practice..."></textarea>
         </div>
-
         <div class="modal-actions">
             <button class="btn-cancel" onclick="closeModal('requestRepeatModal')">Cancel</button>
             <button class="action-btn" style="background-color: #f59e0b; width: auto; margin-top: 0;" onclick="submitRepeatRequest()">Submit Ticket</button>
+        </div>
+    </div>
+</div>
+
+<div id="viewBatchModal" class="modal">
+    <div class="modal-content">
+        <h3 id="viewBatchTitle" style="margin-top: 0;">Batch Students</h3>
+        <div id="viewBatchStudentList" style="margin-top: 15px; border: 1px solid #eee; border-radius: 8px; max-height: 300px; overflow-y: auto;">
+            </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeModal('viewBatchModal')">Close</button>
         </div>
     </div>
 </div>
@@ -224,7 +282,7 @@
         fetchInstructorsList(); 
         fetchBatchesList(); 
         fetchDropoutsList(); 
-        fetchTicketsList(); // This will now run successfully!
+        fetchTicketsList();
     }
 
     // Tab & Modal Logic
@@ -278,9 +336,9 @@
                 if(currentStatus !== 'Dropout') {
                     actionHTML = `
                         <div class="action-cell-btns" id="action-cell-${s.id}">
-                            <button style="background-color: #2f3c88; color: white; padding: 5px 10px; border:none; border-radius:4px; cursor:pointer;" onclick="enableLevelEdit('${s.id}', '${currentLevel}')">✏️ Edit</button>
-                            <button style="background-color: ${toggleBtnColor}; color: white; padding: 5px 10px; border:none; border-radius:4px; cursor:pointer;" onclick="toggleStudentStatus('${s.id}', '${currentStatus}')">⛔ ${toggleAction}</button>
-                            <button style="background-color: #f59e0b; color: white; padding: 5px 10px; border:none; border-radius:4px; cursor:pointer;" onclick="openRepeatModal('${s.unique_id}', '${s.first_name} ${s.last_name}', '${currentLevel}')">🔁 Repeat</button>
+                            <button style="background-color: #2f3c88; color: white;" onclick="enableLevelEdit('${s.id}', '${currentLevel}')">✏️ Edit</button>
+                            <button style="background-color: ${toggleBtnColor}; color: white;" onclick="toggleStudentStatus('${s.id}', '${currentStatus}')">⛔ ${toggleAction}</button>
+                            <button style="background-color: #f59e0b; color: white;" onclick="openRepeatModal('${s.unique_id}', '${s.first_name} ${s.last_name}', '${currentLevel}')">🔁 Repeat</button>
                         </div>
                     `;
                 } else {
@@ -296,7 +354,6 @@
             });
         }
         loadDropoutStudentDropdown(); 
-        loadUnassignedStudents();
     }
 
     async function registerStudent() {
@@ -387,22 +444,43 @@
         }
     }
 
-    // ================= BATCH LOGIC =================
-    async function loadUnassignedStudents() {
-        const { data: assigned } = await supabase.from('student_batches').select('student_id');
-        const assignedIds = assigned ? assigned.map(a => a.student_id) : [];
+    // ================= NEW BATCH LOGIC (FILTERING & VIEWING) =================
+    function openCreateBatchModal() {
+        // Reset the form and dropdowns before showing
+        document.getElementById('batchLevel').value = '';
+        filterStudentsForBatch(); // This will show "Select level first"
+        openModal('addBatchModal');
+    }
+
+    async function filterStudentsForBatch() {
+        const selectedLevel = document.getElementById('batchLevel').value;
         const dropdown = document.getElementById('selectStudents');
         if(!dropdown) return;
         
         dropdown.innerHTML = '';
+
+        if (!selectedLevel) {
+            dropdown.innerHTML = '<option value="" disabled>Select a batch level first...</option>';
+            return;
+        }
+
+        // Get currently assigned student IDs
+        const { data: assigned } = await supabase.from('student_batches').select('student_id');
+        const assignedIds = assigned ? assigned.map(a => a.student_id) : [];
+        
         let count = 0;
         allStudentsData.forEach(s => {
-            if (!assignedIds.includes(s.unique_id) && s.status === 'Active') {
+            const sLevel = s.standard || 'Level 0';
+            // Match: Not assigned, Active, AND matches selected dropdown level
+            if (!assignedIds.includes(s.unique_id) && s.status === 'Active' && sLevel === selectedLevel) {
                 dropdown.innerHTML += `<option value="${s.unique_id}">${s.first_name} ${s.last_name} (${s.unique_id})</option>`;
                 count++;
             }
         });
-        if (count === 0) dropdown.innerHTML = '<option value="" disabled>No eligible active students available.</option>';
+
+        if (count === 0) {
+            dropdown.innerHTML = `<option value="" disabled>No unassigned, active students found in ${selectedLevel}.</option>`;
+        }
     }
 
     async function fetchBatchesList() {
@@ -415,22 +493,62 @@
         if (batches) {
             batches.forEach(b => {
                 let studentCount = enrollments ? enrollments.filter(e => e.batch_id === b.id).length : 0;
-                tbody.innerHTML += `<tr><td><b>${b.level}</b></td><td>${b.batch_day} at ${b.batch_time}</td><td>${b.ci_id}</td><td>${studentCount} Enrolled</td><td><span style="color: #28a745; font-weight: bold;">Active</span></td></tr>`;
+                tbody.innerHTML += `<tr>
+                    <td><b>${b.level}</b></td>
+                    <td>${b.batch_day} at ${b.batch_time}</td>
+                    <td>${b.ci_id}</td>
+                    <td>${studentCount} Enrolled</td>
+                    <td><span style="color: #28a745; font-weight: bold;">Active</span></td>
+                    <td><button class="action-btn blue" style="padding: 6px 12px; width: auto; margin:0; font-size: 0.85em;" onclick="viewBatchStudents('${b.id}', '${b.level}', '${b.batch_day}', '${b.batch_time}')">👁️ View Students</button></td>
+                </tr>`;
             });
         }
+    }
+
+    async function viewBatchStudents(batchId, level, day, time) {
+        document.getElementById('viewBatchTitle').innerText = `${level} Students (${day} at ${time})`;
+        const listContainer = document.getElementById('viewBatchStudentList');
+        listContainer.innerHTML = '<p style="padding: 10px;">Loading students...</p>';
+        openModal('viewBatchModal');
+
+        const { data: enrollments } = await supabase.from('student_batches').select('student_id').eq('batch_id', batchId);
+        const studentIds = enrollments ? enrollments.map(e => e.student_id) : [];
+
+        if (studentIds.length === 0) {
+            listContainer.innerHTML = '<p style="padding: 10px;">No students currently enrolled in this batch.</p>';
+            return;
+        }
+
+        let html = '<ul style="list-style: none; padding: 0; margin: 0;">';
+        studentIds.forEach(id => {
+            const student = allStudentsData.find(s => s.unique_id === id);
+            if (student) {
+                html += `<li style="padding: 12px 15px; border-bottom: 1px solid #eee;"><b>${student.first_name} ${student.last_name}</b> <span style="color:#666; font-size:0.9em; float:right;">ID: ${id}</span></li>`;
+            } else {
+                html += `<li style="padding: 12px 15px; border-bottom: 1px solid #eee; color: #dc3545;">Unknown Student (${id})</li>`;
+            }
+        });
+        html += '</ul>';
+        listContainer.innerHTML = html;
     }
 
     async function createBatch() {
         const selectElem = document.getElementById('selectStudents');
         if(!selectElem) return;
         const selectedStudents = Array.from(selectElem.selectedOptions).map(option => option.value);
-        if (selectedStudents.length === 0 || selectedStudents[0] === "") return;
+        if (selectedStudents.length === 0 || selectedStudents[0] === "") {
+            alert("Please select at least one student.");
+            return;
+        }
         
         const day = document.getElementById('batchDay').value; 
         const time = document.getElementById('batchTime').value;
         const level = document.getElementById('batchLevel').value; 
         const ci = document.getElementById('assignCi').value;
-        if(!day || !time || !level || !ci) return;
+        if(!day || !time || !level || !ci) {
+            alert("Please fill out all batch details.");
+            return;
+        }
         
         const { data: batchData, error: batchError } = await supabase.from('batches').insert([{ batch_day: day, batch_time: time, level: level, ci_id: ci }]).select();
         if (batchError) return;
