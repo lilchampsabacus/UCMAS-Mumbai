@@ -203,7 +203,7 @@
     // Supabase initialization
     const supabaseUrl = 'https://jugzuutcnxcipoyawhbq.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1Z3p1dXRjbnhjaXBveWF3aGJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mjg5OTgsImV4cCI6MjA5MTIwNDk5OH0.HzkuDQ8Yi5rq5ZP95xx8oxC1GCNcUr1kGs5F-psu95I';
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     // Modal Logic
     const modal = document.getElementById("addUfModal");
@@ -225,8 +225,11 @@
             return;
         }
 
-        // Auto-generate credentials based on Franchise Code
-        const generatedEmail = `${code.toLowerCase().replace(/\s+/g, '')}@cbs.in`;
+        // ULTRA-STRICT SANITIZATION: 
+        // /[^a-z0-9]/g strips out absolutely everything except lowercase letters and numbers.
+        // This guarantees no hidden characters, dashes, or symbols can break the email.
+        const cleanCode = code.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const generatedEmail = `${cleanCode}@cbs.in`;
         const generatedPassword = "Welcome@123";
 
         const btn = document.querySelector('.modal-actions .btn-primary');
@@ -241,11 +244,11 @@
             });
 
             if (error) {
-                // Friendly error handling instead of technical database jargon
+                // If it fails, show the EXACT error message from Supabase for easy debugging
                 if (error.message.includes("already registered") || error.status === 422) {
                     alert("User already existed.");
                 } else {
-                    alert("An issue occurred while creating the franchise. Please try again.");
+                    alert(`Supabase Error: ${error.message}`);
                 }
                 return;
             }
@@ -261,7 +264,7 @@
             document.getElementById('newUfArea').value = '';
 
         } catch (error) {
-            alert("An issue occurred while creating the franchise. Please try again.");
+            alert(`Unexpected Error: ${error.message}`);
         } finally {
             btn.innerText = originalText;
         }
