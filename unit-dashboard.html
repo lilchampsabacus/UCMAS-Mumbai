@@ -102,7 +102,7 @@
              <h3 style="border-bottom: none; margin-top: 0;">Batch Directory</h3>
              <button class="wide-add-btn" onclick="openCreateBatchModal()">➕ Create Batch</button>
             <table>
-                <thead><tr><th>Level</th><th>Schedule</th><th>Instructor Code</th><th>Enrolled Students</th><th>Status</th><th>Actions</th></tr></thead>
+                <thead><tr><th>Level</th><th>Schedule</th><th>Dates</th><th>Enrolled</th><th>Status</th><th>Actions</th></tr></thead>
                 <tbody id="batchTableBody"><tr><td colspan="6" style="text-align: center;">Loading batches...</td></tr></tbody>
             </table>
         </div>
@@ -147,7 +147,6 @@
     <div id="tab-tickets" class="tab-content">
         <div class="glass-panel" style="margin-bottom: 50px; padding: 20px;">
              <h3 style="border-bottom: none; margin-top: 0;">🎟️ Support Tickets (Level Repeat Requests)</h3>
-             <p style="color: #666; font-size: 0.9em;">Track approvals from the Master Franchise for students who need to repeat a level.</p>
             <table>
                 <thead><tr><th>Ticket Date</th><th>Student</th><th>Level to Repeat</th><th>Reason Sent</th><th>Status</th></tr></thead>
                 <tbody id="ticketTableBody"><tr><td colspan="5" style="text-align: center;">Loading tickets...</td></tr></tbody>
@@ -208,7 +207,8 @@
             <div>
                 <label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Assign Instructor</label>
                 <select id="assignCi"><option value="">Loading...</option></select>
-                <label style="display:block; margin:15px 0 5px; font-weight:bold; color:#2f3c88;">Batch Details</label>
+                
+                <label style="display:block; margin:15px 0 5px; font-weight:bold; color:#2f3c88;">Batch Schedule</label>
                 <select id="batchDay">
                     <option value="">Select Day</option><option value="Monday">Monday</option><option value="Tuesday">Tuesday</option><option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option><option value="Friday">Friday</option><option value="Saturday">Saturday</option><option value="Sunday">Sunday</option>
                 </select>
@@ -217,6 +217,33 @@
                     <option value="">Select Level First</option>
                     <option value="Level 0">Level 0</option><option value="Level 1">Level 1</option><option value="Level 2">Level 2</option><option value="Level 3">Level 3</option><option value="Level 4">Level 4</option><option value="Level 5">Level 5</option><option value="Level 6">Level 6</option><option value="Level 7">Level 7</option><option value="Level 8">Level 8</option><option value="Level 9">Level 9</option><option value="Level 10">Level 10</option>
                 </select>
+
+                <label style="display:block; margin:15px 0 5px; font-weight:bold; color:#2f3c88;">Timeline</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="date" id="batchStartDate" style="flex: 1;" title="Start Date">
+                    <select id="batchDuration" style="flex: 1;" title="Expected Duration">
+                        <option value="4">4 Months</option>
+                        <option value="5">5 Months</option>
+                        <option value="6">6 Months</option>
+                    </select>
+                </div>
+
+                <label style="display:block; margin:15px 0 5px; font-weight:bold; color:#2f3c88;">Holiday Extensions</label>
+                <select id="holidayExtension" style="margin-bottom: 5px;">
+                    <option value="0">No Extension</option>
+                    <option value="30">Summer Vacation (Skip May / +1 Month)</option>
+                    <option value="15">Diwali / Festival Break (+15 Days)</option>
+                    <option value="45">Summer + Festival Break (+45 Days)</option>
+                </select>
+                <p style="font-size: 0.75em; color: #666; margin: 0; line-height: 1.4;">
+                    <b>Upcoming Major Holidays:</b><br>
+                    • Holi (March)<br>
+                    • Summer Vacations (May)<br>
+                    • Ganesh Chaturthi (August/September)<br>
+                    • Navratri & Dussehra (October)<br>
+                    • Diwali (October/November)
+                </p>
+
             </div>
             <div>
                 <label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Select Students</label>
@@ -235,7 +262,6 @@
 <div id="requestRepeatModal" class="modal">
     <div class="modal-content">
         <h3>Request Level Repeat</h3>
-        <p style="color: #666; font-size: 0.9em;">Send a ticket to the Master Franchise to allow this student to repeat their current level.</p>
         <input type="hidden" id="repeatStudentId">
         <div class="form-group" style="margin-bottom: 15px;">
             <label style="font-weight: bold;">Student Name</label>
@@ -247,7 +273,7 @@
         </div>
         <div class="form-group" style="margin-bottom: 15px;">
             <label style="font-weight: bold;">Reason for Repeat</label>
-            <textarea id="repeatReason" rows="3" placeholder="e.g. Scored less marks in recent evaluation, needs more practice..."></textarea>
+            <textarea id="repeatReason" rows="3" placeholder="e.g. Scored less marks..."></textarea>
         </div>
         <div class="modal-actions">
             <button class="btn-cancel" onclick="closeModal('requestRepeatModal')">Cancel</button>
@@ -260,7 +286,7 @@
     <div class="modal-content">
         <h3 id="viewBatchTitle" style="margin-top: 0;">Batch Students</h3>
         <div id="viewBatchStudentList" style="margin-top: 15px; border: 1px solid #eee; border-radius: 8px; max-height: 300px; overflow-y: auto;">
-            </div>
+        </div>
         <div class="modal-actions">
             <button class="btn-cancel" onclick="closeModal('viewBatchModal')">Close</button>
         </div>
@@ -268,7 +294,6 @@
 </div>
 
 <script>
-    // Database Initialization
     const supabaseUrl = 'https://jugzuutcnxcipoyawhbq.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1Z3p1dXRjbnhjaXBveWF3aGJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mjg5OTgsImV4cCI6MjA5MTIwNDk5OH0.HzkuDQ8Yi5rq5ZP95xx8oxC1GCNcUr1kGs5F-psu95I';
     supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -285,7 +310,6 @@
         fetchTicketsList();
     }
 
-    // Tab & Modal Logic
     function openTab(evt, tabId) {
         const contents = document.getElementsByClassName("tab-content");
         for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
@@ -299,11 +323,10 @@
     function closeModal(modalId) { document.getElementById(modalId).style.display = "none"; }
     window.onclick = function(e) { if (e.target.classList.contains('modal')) e.target.style.display = "none"; }
 
-    // Dashboard Stats
     async function loadDashboardStats() {
         const { count: sCount } = await supabase.from('students').select('*', { count: 'exact', head: true }).eq('status', 'Active');
         const { count: cCount } = await supabase.from('course_instructors').select('*', { count: 'exact', head: true });
-        const { count: bCount } = await supabase.from('batches').select('*', { count: 'exact', head: true });
+        const { count: bCount } = await supabase.from('batches').select('*', { count: 'exact', head: true }).eq('status', 'Active');
         
         if(document.getElementById('totalStudents')) document.getElementById('totalStudents').innerText = sCount || 0;
         if(document.getElementById('totalCIs')) document.getElementById('totalCIs').innerText = cCount || 0;
@@ -438,17 +461,15 @@
         const code = document.getElementById('ciCode').value;
         if(!name || !code) return;
         const { error } = await supabase.from('course_instructors').insert([{ ci_name: name, ci_code: code, mobile: document.getElementById('ciMobile').value }]);
-        if(!error) { 
-            closeModal('addCiModal');
-            refreshAllData(); 
-        }
+        if(!error) { closeModal('addCiModal'); refreshAllData(); }
     }
 
-    // ================= NEW BATCH LOGIC (FILTERING & VIEWING) =================
+    // ================= NEW BATCH LOGIC (TIMELINE & FILTERING) =================
     function openCreateBatchModal() {
-        // Reset the form and dropdowns before showing
         document.getElementById('batchLevel').value = '';
-        filterStudentsForBatch(); // This will show "Select level first"
+        document.getElementById('batchStartDate').value = '';
+        document.getElementById('holidayExtension').value = '0'; // Reset holiday
+        filterStudentsForBatch(); 
         openModal('addBatchModal');
     }
 
@@ -458,29 +479,24 @@
         if(!dropdown) return;
         
         dropdown.innerHTML = '';
-
         if (!selectedLevel) {
             dropdown.innerHTML = '<option value="" disabled>Select a batch level first...</option>';
             return;
         }
 
-        // Get currently assigned student IDs
         const { data: assigned } = await supabase.from('student_batches').select('student_id');
         const assignedIds = assigned ? assigned.map(a => a.student_id) : [];
         
         let count = 0;
         allStudentsData.forEach(s => {
             const sLevel = s.standard || 'Level 0';
-            // Match: Not assigned, Active, AND matches selected dropdown level
             if (!assignedIds.includes(s.unique_id) && s.status === 'Active' && sLevel === selectedLevel) {
                 dropdown.innerHTML += `<option value="${s.unique_id}">${s.first_name} ${s.last_name} (${s.unique_id})</option>`;
                 count++;
             }
         });
 
-        if (count === 0) {
-            dropdown.innerHTML = `<option value="" disabled>No unassigned, active students found in ${selectedLevel}.</option>`;
-        }
+        if (count === 0) dropdown.innerHTML = `<option value="" disabled>No unassigned, active students found in ${selectedLevel}.</option>`;
     }
 
     async function fetchBatchesList() {
@@ -491,15 +507,43 @@
         
         tbody.innerHTML = '';
         if (batches) {
+            const today = new Date();
+            
             batches.forEach(b => {
                 let studentCount = enrollments ? enrollments.filter(e => e.batch_id === b.id).length : 0;
+                
+                let dateDisplay = `<div style="font-size:0.85em; color:#666;">Start: ${b.start_date || 'N/A'}<br>End: ${b.expected_end_date || 'N/A'}</div>`;
+                
+                if (b.status === 'Active' && b.expected_end_date) {
+                    const expDate = new Date(b.expected_end_date);
+                    if (expDate < today) {
+                        dateDisplay += `<div style="color: #dc3545; font-size: 0.8em; font-weight: bold; margin-top:4px;">⚠️ Overdue</div>`;
+                    }
+                } else if (b.status === 'Completed') {
+                    dateDisplay += `<div style="color: #28a745; font-size: 0.8em; font-weight: bold; margin-top:4px;">✅ Completed on ${b.actual_end_date}</div>`;
+                }
+
+                let statusBadge = `<span style="color: #28a745; font-weight: bold;">Active</span>`;
+                let completeBtn = `<button class="action-btn" style="background-color:#28a745; padding: 6px 12px; width: auto; margin:0 5px 0 0; font-size: 0.85em;" onclick="completeBatch('${b.id}')">✔️ Mark Complete</button>`;
+                
+                if(b.status === 'Completed') {
+                    statusBadge = `<span style="color: #6c757d; font-weight: bold;">Completed</span>`;
+                    completeBtn = ``; 
+                }
+
                 tbody.innerHTML += `<tr>
                     <td><b>${b.level}</b></td>
-                    <td>${b.batch_day} at ${b.batch_time}</td>
+                    <td>${b.batch_day}<br><span style="font-size:0.85em;">${b.batch_time}</span></td>
                     <td>${b.ci_id}</td>
+                    <td>${dateDisplay}</td>
                     <td>${studentCount} Enrolled</td>
-                    <td><span style="color: #28a745; font-weight: bold;">Active</span></td>
-                    <td><button class="action-btn blue" style="padding: 6px 12px; width: auto; margin:0; font-size: 0.85em;" onclick="viewBatchStudents('${b.id}', '${b.level}', '${b.batch_day}', '${b.batch_time}')">👁️ View Students</button></td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <div style="display:flex;">
+                            ${completeBtn}
+                            <button class="action-btn blue" style="padding: 6px 12px; width: auto; margin:0; font-size: 0.85em;" onclick="viewBatchStudents('${b.id}', '${b.level}', '${b.batch_day}', '${b.batch_time}')">👁️ View</button>
+                        </div>
+                    </td>
                 </tr>`;
             });
         }
@@ -524,8 +568,6 @@
             const student = allStudentsData.find(s => s.unique_id === id);
             if (student) {
                 html += `<li style="padding: 12px 15px; border-bottom: 1px solid #eee;"><b>${student.first_name} ${student.last_name}</b> <span style="color:#666; font-size:0.9em; float:right;">ID: ${id}</span></li>`;
-            } else {
-                html += `<li style="padding: 12px 15px; border-bottom: 1px solid #eee; color: #dc3545;">Unknown Student (${id})</li>`;
             }
         });
         html += '</ul>';
@@ -536,21 +578,37 @@
         const selectElem = document.getElementById('selectStudents');
         if(!selectElem) return;
         const selectedStudents = Array.from(selectElem.selectedOptions).map(option => option.value);
-        if (selectedStudents.length === 0 || selectedStudents[0] === "") {
-            alert("Please select at least one student.");
-            return;
-        }
+        if (selectedStudents.length === 0 || selectedStudents[0] === "") { alert("Please select at least one student."); return; }
         
         const day = document.getElementById('batchDay').value; 
         const time = document.getElementById('batchTime').value;
         const level = document.getElementById('batchLevel').value; 
         const ci = document.getElementById('assignCi').value;
-        if(!day || !time || !level || !ci) {
-            alert("Please fill out all batch details.");
-            return;
+        const startDateVal = document.getElementById('batchStartDate').value;
+        const durationVal = parseInt(document.getElementById('batchDuration').value);
+        const holidayExtensionDays = parseInt(document.getElementById('holidayExtension').value);
+        
+        if(!day || !time || !level || !ci || !startDateVal) { alert("Please fill out all batch details including Start Date."); return; }
+        
+        // Calculate Expected End Date including Holiday Extensions
+        const startDate = new Date(startDateVal);
+        const expectedEndDate = new Date(startDate);
+        
+        // 1. Add base duration
+        expectedEndDate.setMonth(expectedEndDate.getMonth() + durationVal);
+        
+        // 2. Add holiday extensions (if any)
+        if(holidayExtensionDays > 0) {
+            expectedEndDate.setDate(expectedEndDate.getDate() + holidayExtensionDays);
         }
         
-        const { data: batchData, error: batchError } = await supabase.from('batches').insert([{ batch_day: day, batch_time: time, level: level, ci_id: ci }]).select();
+        const expectedEndDateStr = expectedEndDate.toISOString().split('T')[0];
+
+        const { data: batchData, error: batchError } = await supabase.from('batches').insert([{ 
+            batch_day: day, batch_time: time, level: level, ci_id: ci, 
+            start_date: startDateVal, expected_end_date: expectedEndDateStr, status: 'Active' 
+        }]).select();
+        
         if (batchError) return;
 
         const enrollmentData = selectedStudents.map(sId => ({ student_id: sId, batch_id: batchData[0].id }));
@@ -560,6 +618,13 @@
             closeModal('addBatchModal');
             refreshAllData();
         }
+    }
+
+    async function completeBatch(batchId) {
+        if(!confirm("Mark this batch as completed? \n\nNote: Remember to update the student levels in the Student Directory afterwards!")) return;
+        const todayStr = new Date().toISOString().split('T')[0];
+        const { error } = await supabase.from('batches').update({ status: 'Completed', actual_end_date: todayStr }).eq('id', batchId);
+        if(!error) refreshAllData();
     }
 
     // ================= DROPOUTS LOGIC =================
@@ -575,9 +640,7 @@
     function autoFillDropoutLevel() {
         const selectedId = document.getElementById('dropoutStudent').value;
         const student = allStudentsData.find(s => s.unique_id === selectedId);
-        if(document.getElementById('dropoutLevel')) {
-            document.getElementById('dropoutLevel').value = student ? (student.standard || 'Level 0') : '';
-        }
+        if(document.getElementById('dropoutLevel')) document.getElementById('dropoutLevel').value = student ? (student.standard || 'Level 0') : '';
     }
 
     function toggleOtherReason() {
@@ -633,32 +696,22 @@
         const reason = document.getElementById('repeatReason').value;
 
         if(!reason) { alert("Please provide a reason."); return; }
-
         const { error } = await supabase.from('level_repeats').insert([{ student_id: id, student_name: name, level_to_repeat: level, reason: reason, status: 'Pending' }]);
 
-        if(!error) {
-            alert("Ticket submitted successfully!");
-            closeModal('requestRepeatModal');
-            fetchTicketsList();
-        }
+        if(!error) { alert("Ticket submitted successfully!"); closeModal('requestRepeatModal'); fetchTicketsList(); }
     }
 
     async function fetchTicketsList() {
         const { data } = await supabase.from('level_repeats').select('*').order('created_at', { ascending: false });
         const tbody = document.getElementById('ticketTableBody');
         if(!tbody) return;
-        
         tbody.innerHTML = '';
         if (data && data.length > 0) {
             data.forEach(t => {
-                let badgeColor = '#f59e0b'; 
-                if(t.status === 'Approved') badgeColor = '#28a745'; 
-                if(t.status === 'Rejected') badgeColor = '#dc3545';
+                let badgeColor = '#f59e0b'; if(t.status === 'Approved') badgeColor = '#28a745'; if(t.status === 'Rejected') badgeColor = '#dc3545';
                 tbody.innerHTML += `<tr><td>${new Date(t.created_at).toLocaleDateString()}</td><td><b>${t.student_name}</b><br><span style="font-size:0.8em;color:#666;">${t.student_id}</span></td><td>${t.level_to_repeat}</td><td>${t.reason}</td><td><span style="background-color:${badgeColor}; color:white; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:0.85em;">${t.status}</span></td></tr>`;
             });
-        } else {
-             tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No tickets generated.</td></tr>`;
-        }
+        } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No tickets generated.</td></tr>`; }
     }
 </script>
 </body>
