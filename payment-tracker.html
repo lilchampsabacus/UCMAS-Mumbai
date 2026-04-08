@@ -33,7 +33,7 @@
         th { background-color: rgba(47, 60, 136, 0.1); font-weight: 600; color: #2f3c88; }
         
         /* PDF specific styles */
-        #pdfContent { background: white; padding: 40px; border-radius: 8px; color: #333; }
+        #pdfContent { background: white; padding: 40px; border-radius: 8px; color: #333; width: 100%; box-sizing: border-box; }
         .pdf-header { text-align: center; border-bottom: 2px solid #2f3c88; padding-bottom: 15px; margin-bottom: 20px; }
         .pdf-header h2 { color: #2f3c88; margin: 0 0 5px 0; }
         .pdf-details { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 1.1em; }
@@ -91,7 +91,7 @@
                     <option value="2">2nd Year</option>
                     <option value="3">3rd Year</option>
                     <option value="4">4th Year</option>
-                    <option value="5">5th Year</option>
+                    <option value="5">5th Year (4 Months Prorated)</option>
                 </select>
             </div>
             <div style="grid-column: span 2;">
@@ -139,7 +139,7 @@
                 Total Annual Amount: ₹<span id="pdfGrandTotal"></span>
             </div>
             <p style="text-align: center; margin-top: 30px; font-size: 0.85em; color: #888;">
-                * Fees are calculated based on a 12-month academic cycle.<br>
+                * Fees are calculated based on a 12-month academic cycle (48 billable months total).<br>
                 * Kit fee is a one-time charge applicable only in Year 1.
             </p>
         </div>
@@ -186,10 +186,11 @@
     function generatePlanner() {
         const student = document.getElementById('ptStudent').value;
         const monthlyFee = parseInt(document.getElementById('ptClass').value);
-        const startMonthStr = document.getElementById('ptStartMonth').value; // Format: YYYY-MM
+        const startMonthStr = document.getElementById('ptStartMonth').value; 
         const year = parseInt(document.getElementById('ptYear').value);
         const freqSelect = document.getElementById('ptFrequency');
-        const numInstallments = parseInt(freqSelect.value);
+        
+        const numInstallmentsInput = parseInt(freqSelect.value); 
         const freqText = freqSelect.options[freqSelect.selectedIndex].text;
 
         if(!student || !startMonthStr) {
@@ -197,19 +198,13 @@
             return;
         }
 
-        // --- MATH LOGIC ---
-        const annualTuition = monthlyFee * 12; 
-        const baseInstallment = annualTuition / numInstallments;
+        // --- DYNAMIC MATH ENGINE ---
         const kitFee = (year === 1) ? 1700 : 0; 
-        const grandTotal = annualTuition + kitFee;
+        
+        const totalMonthsInYear = (year === 5) ? 4 : 12;
+        const monthsPerInstallment = 12 / numInstallmentsInput; 
 
-        // Months between each installment
-        const monthsStep = 12 / numInstallments; 
-        
-        // Parse the base date
         let startDate = new Date(startMonthStr + "-01");
-        
-        // Academic Year Offset Fix
         startDate.setFullYear(startDate.getFullYear() + (year - 1));
 
         // --- RENDER PDF CONTENT ---
@@ -217,21 +212,28 @@
         document.getElementById('pdfStudentName').innerText = student;
         document.getElementById('pdfYear').innerText = `Year ${year}`;
         document.getElementById('pdfFrequency').innerText = freqText;
-        document.getElementById('pdfGrandTotal').innerText = grandTotal.toLocaleString('en-IN');
 
         const tbody = document.getElementById('pdfTableBody');
         tbody.innerHTML = '';
 
-        for(let i = 1; i <= numInstallments; i++) {
-            let currentKitFee = (i === 1) ? kitFee : 0;
+        let grandTotal = 0;
+        let totalMonthsRemaining = totalMonthsInYear;
+        let iteration = 1;
+        
+        while (totalMonthsRemaining > 0) {
+            let currentInstallmentMonths = Math.min(totalMonthsRemaining, monthsPerInstallment);
+            let baseInstallment = currentInstallmentMonths * monthlyFee;
+            let currentKitFee = (iteration === 1) ? kitFee : 0;
             let totalRowAmount = baseInstallment + currentKitFee;
+            
+            grandTotal += totalRowAmount;
 
             let monthName = startDate.toLocaleString('default', { month: 'long' });
             let yearNum = startDate.getFullYear();
 
             tbody.innerHTML += `
                 <tr>
-                    <td><b>${i}</b></td>
+                    <td><b>${iteration}</b></td>
                     <td>${monthName} ${yearNum}</td>
                     <td>₹${baseInstallment.toLocaleString('en-IN')}</td>
                     <td>₹${currentKitFee.toLocaleString('en-IN')}</td>
@@ -239,10 +241,12 @@
                 </tr>
             `;
 
-            // Step forward to the next billing month based on frequency
-            startDate.setMonth(startDate.getMonth() + monthsStep);
+            totalMonthsRemaining -= currentInstallmentMonths;
+            iteration++;
+            startDate.setMonth(startDate.getMonth() + monthsPerInstallment);
         }
 
+        document.getElementById('pdfGrandTotal').innerText = grandTotal.toLocaleString('en-IN');
         document.getElementById('plannerDisplay').style.display = 'block';
     }
 
@@ -251,17 +255,19 @@
         const studentName = document.getElementById('pdfStudentName').innerText.split(' ')[0]; 
         const element = document.getElementById('pdfContent');
         
-        // Robust options to prevent cutoff and backdrop-filter issues
         const opt = {
-            margin:       [0.5, 0.5, 0.5, 0.5], // 0.5 inch margins all around
+            margin:       0.5,
             filename:     `UCMAS_Fee_Planner_${studentName}.pdf`,
             image:        { type: 'jpeg', quality: 1 },
             html2canvas:  { 
                 scale: 2, 
                 useCORS: true,
-                backgroundColor: '#ffffff' // Forces a white background, fixing transparency cutoff issues
+                backgroundColor: '#ffffff',
+                scrollY: 0,
+                windowWidth: 1050 // Widened viewport to support landscape properly
             },
-            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            // Changed orientation to landscape
+            jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
         };
 
         html2pdf().set(opt).from(element).save();
