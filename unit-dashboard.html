@@ -49,7 +49,7 @@
         .tab-bar {
             display: flex; gap: 10px; margin-bottom: 20px;
             background: rgba(255, 255, 255, 0.95); padding: 12px 20px; border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); align-items: center; flex-wrap: wrap;
         }
         .tab-btn, .tab-link {
             background: transparent; border: none; padding: 10px 20px; font-size: 0.95em;
@@ -89,11 +89,12 @@
         th { background-color: rgba(47, 60, 136, 0.1); font-weight: 600; color: #2f3c88; }
         tr:hover { background-color: rgba(255, 255, 255, 0.5); }
 
-        /* Action Bar for Tables */
-        .table-header-actions {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
+        .table-header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .wide-add-btn {
+            background-color: #2f3c88; color: white; border: none; font-weight: bold; cursor: pointer; 
+            padding: 12px; border-radius: 8px; font-size: 1em; width: 100%; margin-bottom: 15px; transition: 0.3s;
         }
-        .btn-small { padding: 8px 16px; font-size: 0.9em; margin-top: 0; width: auto; }
+        .wide-add-btn:hover { background-color: #1f285e; }
 
         /* Modals */
         .modal {
@@ -112,10 +113,11 @@
 
         /* Editable Row Styling */
         .edit-select { width: 120px; padding: 6px; font-size: 0.9em; }
-        .edit-btn, .save-btn, .cancel-btn { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; font-weight: bold; }
+        .edit-btn, .save-btn, .cancel-btn, .toggle-status-btn { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; font-weight: bold; }
         .edit-btn { background-color: #2f3c88; color: white; }
         .save-btn { background-color: #28a745; color: white; margin-right: 5px; }
-        .cancel-btn { background-color: #dc3545; color: white; }
+        .cancel-btn { background-color: #6c757d; color: white; }
+        .toggle-status-btn { margin-left: 5px; color: white; }
 
     </style>
 </head>
@@ -137,16 +139,14 @@
         <button class="tab-btn active" onclick="openTab(event, 'tab-students')">📋 Students</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-instructors')">👩‍🏫 Course Instructors</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-batches')">📅 Batch Management</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-dropouts')">📉 Dropouts</button>
         <a href="payment-tracker.html" class="tab-link">💳 Payment Tracker</a>
     </div>
 
     <div id="tab-students" class="tab-content active">
-        
         <div class="glass-panel" style="margin-bottom: 50px; padding: 20px;">
-            <div class="table-header-actions">
-                <h3 style="border-bottom: none; margin: 0;">Student Directory</h3>
-                <button class="action-btn blue btn-small" onclick="openModal('addStudentModal')">➕ Add New Student</button>
-            </div>
+            <h3 style="border-bottom: none; margin-top: 0;">Student Directory</h3>
+            <button class="wide-add-btn" onclick="openModal('addStudentModal')">➕ Add New Student</button>
             <table>
                 <thead>
                     <tr><th>Full Name</th><th>Student ID</th><th>DOB</th><th>Current Level</th><th>Status</th><th>Actions</th></tr>
@@ -158,10 +158,8 @@
 
     <div id="tab-instructors" class="tab-content">
         <div class="glass-panel" style="margin-bottom: 50px; padding: 20px;">
-             <div class="table-header-actions">
-                <h3 style="border-bottom: none; margin: 0;">Course Instructors Directory</h3>
-                <button class="action-btn blue btn-small" onclick="openModal('addCiModal')">➕ Add Instructor</button>
-            </div>
+             <h3 style="border-bottom: none; margin-top: 0;">Course Instructors Directory</h3>
+             <button class="wide-add-btn" onclick="openModal('addCiModal')">➕ Add Instructor</button>
             <table>
                 <thead>
                     <tr><th>Instructor Name</th><th>Instructor Code</th><th>Mobile Number</th><th>Status</th></tr>
@@ -173,15 +171,57 @@
 
     <div id="tab-batches" class="tab-content">
         <div class="glass-panel" style="margin-bottom: 50px; padding: 20px;">
-             <div class="table-header-actions">
-                <h3 style="border-bottom: none; margin: 0;">Batch Directory</h3>
-                <button class="action-btn blue btn-small" onclick="openModal('addBatchModal')">➕ Create Batch</button>
-            </div>
+             <h3 style="border-bottom: none; margin-top: 0;">Batch Directory</h3>
+             <button class="wide-add-btn" onclick="openModal('addBatchModal')">➕ Create Batch</button>
             <table>
                 <thead>
                     <tr><th>Level</th><th>Schedule</th><th>Instructor Code</th><th>Enrolled Students</th><th>Status</th></tr>
                 </thead>
                 <tbody id="batchTableBody"><tr><td colspan="5" style="text-align: center;">Loading batches...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="tab-dropouts" class="tab-content">
+        <div class="form-section">
+            <h3>Record Student Dropout</h3>
+            <div class="grid-2">
+                <div>
+                    <label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Select Student</label>
+                    <select id="dropoutStudent" onchange="autoFillDropoutLevel()">
+                        <option value="">Loading Students...</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Level at Dropout</label>
+                    <input type="text" id="dropoutLevel" readonly style="background-color: #f8f9fa;" placeholder="Auto-fills from student data">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Reason for Dropout</label>
+                    <select id="dropoutReason" onchange="toggleOtherReason()">
+                        <option value="">Select Reason</option>
+                        <option value="Child not interested">Child not interested</option>
+                        <option value="Parent not interested">Parent not interested</option>
+                        <option value="Payment issue">Payment issue</option>
+                        <option value="Relocating">Relocating</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div id="otherReasonDiv" style="display: none;">
+                    <label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Specify Other Reason</label>
+                    <input type="text" id="dropoutOtherReason" placeholder="Please specify...">
+                </div>
+            </div>
+            <button class="action-btn blue" onclick="recordDropout()">Mark as Dropout</button>
+        </div>
+
+        <div class="glass-panel" style="margin-bottom: 50px; padding: 20px;">
+            <h3 style="border-bottom: none; margin-top: 0;">Dropout Directory</h3>
+            <table>
+                <thead>
+                    <tr><th>Student ID</th><th>Level</th><th>Reason</th><th>Specifics</th><th>Date Recorded</th></tr>
+                </thead>
+                <tbody id="dropoutTableBody"><tr><td colspan="5" style="text-align: center;">Loading dropouts...</td></tr></tbody>
             </table>
         </div>
     </div>
@@ -195,23 +235,13 @@
             <input type="text" id="stuLastName" placeholder="Student Last Name">
             <input type="date" id="stuDob" title="Date of Birth">
             <select id="stuGender">
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
+                <option value="">Select Gender</option><option value="Male">Male</option><option value="Female">Female</option>
             </select>
             <select id="stuStandard">
                 <option value="">Select Starting Level</option>
-                <option value="Level 0">Level 0</option>
-                <option value="Level 1">Level 1</option>
-                <option value="Level 2">Level 2</option>
-                <option value="Level 3">Level 3</option>
-                <option value="Level 4">Level 4</option>
-                <option value="Level 5">Level 5</option>
-                <option value="Level 6">Level 6</option>
-                <option value="Level 7">Level 7</option>
-                <option value="Level 8">Level 8</option>
-                <option value="Level 9">Level 9</option>
-                <option value="Level 10">Level 10</option>
+                <option value="Level 0">Level 0</option><option value="Level 1">Level 1</option>
+                <option value="Level 2">Level 2</option><option value="Level 3">Level 3</option>
+                <option value="Level 4">Level 4</option><option value="Level 5">Level 5</option>
             </select>
             <input type="text" id="stuSchool" placeholder="School Name">
             <input type="text" id="fatherName" placeholder="Father's Name">
@@ -252,35 +282,26 @@
                 <label style="display:block; margin:15px 0 5px; font-weight:bold; color:#2f3c88;">Batch Details</label>
                 <select id="batchDay">
                     <option value="">Select Day</option>
-                    <option value="Monday">Monday</option>
-                    <option value="Tuesday">Tuesday</option>
-                    <option value="Wednesday">Wednesday</option>
-                    <option value="Thursday">Thursday</option>
-                    <option value="Friday">Friday</option>
-                    <option value="Saturday">Saturday</option>
+                    <option value="Monday">Monday</option><option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option><option value="Saturday">Saturday</option>
                     <option value="Sunday">Sunday</option>
                 </select>
                 <input type="time" id="batchTime" style="margin-top:10px;">
                 <select id="batchLevel" style="margin-top:10px;">
                     <option value="">Select Level</option>
-                    <option value="Level 0">Level 0</option>
-                    <option value="Level 1">Level 1</option>
-                    <option value="Level 2">Level 2</option>
-                    <option value="Level 3">Level 3</option>
-                    <option value="Level 4">Level 4</option>
-                    <option value="Level 5">Level 5</option>
-                    <option value="Level 6">Level 6</option>
-                    <option value="Level 7">Level 7</option>
-                    <option value="Level 8">Level 8</option>
-                    <option value="Level 9">Level 9</option>
+                    <option value="Level 0">Level 0</option><option value="Level 1">Level 1</option>
+                    <option value="Level 2">Level 2</option><option value="Level 3">Level 3</option>
+                    <option value="Level 4">Level 4</option><option value="Level 5">Level 5</option>
+                    <option value="Level 6">Level 6</option><option value="Level 7">Level 7</option>
+                    <option value="Level 8">Level 8</option><option value="Level 9">Level 9</option>
                     <option value="Level 10">Level 10</option>
                 </select>
             </div>
             <div>
                 <label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Select Students</label>
-                <select id="selectStudents" multiple>
-                    <option value="">Loading...</option>
-                </select>
+                <select id="selectStudents" multiple><option value="">Loading...</option></select>
+                <p style="font-size: 0.85em; color: #666; margin-top: 5px;">Only ACTIVE students who are NOT in a batch appear here.</p>
             </div>
         </div>
         <div class="modal-actions">
@@ -295,6 +316,8 @@
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1Z3p1dXRjbnhjaXBveWF3aGJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mjg5OTgsImV4cCI6MjA5MTIwNDk5OH0.HzkuDQ8Yi5rq5ZP95xx8oxC1GCNcUr1kGs5F-psu95I';
     supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
+    let allStudentsData = []; // Global cache for auto-filling logic
+
     window.onload = function() { refreshAllData(); };
 
     function refreshAllData() {
@@ -302,32 +325,24 @@
         fetchStudentsList();
         fetchInstructorsList();
         fetchBatchesList();
+        fetchDropoutsList();
     }
 
     function openTab(evt, tabId) {
         const contents = document.getElementsByClassName("tab-content");
         for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
-        
         const btns = document.getElementsByClassName("tab-btn");
         for (let i = 0; i < btns.length; i++) btns[i].classList.remove("active");
-        
         document.getElementById(tabId).classList.add("active");
         evt.currentTarget.classList.add("active");
     }
 
-    // Modal Control
     function openModal(modalId) { document.getElementById(modalId).style.display = "flex"; }
     function closeModal(modalId) { document.getElementById(modalId).style.display = "none"; }
-    
-    // Close modal on outside click
-    window.onclick = function(event) {
-        if (event.target.classList.contains('modal')) {
-            event.target.style.display = "none";
-        }
-    }
+    window.onclick = function(event) { if (event.target.classList.contains('modal')) event.target.style.display = "none"; }
 
     async function loadDashboardStats() {
-        const { count: sCount } = await supabase.from('students').select('*', { count: 'exact', head: true });
+        const { count: sCount } = await supabase.from('students').select('*', { count: 'exact', head: true }).eq('status', 'Active');
         const { count: cCount } = await supabase.from('course_instructors').select('*', { count: 'exact', head: true });
         const { count: bCount } = await supabase.from('batches').select('*', { count: 'exact', head: true });
         
@@ -339,76 +354,79 @@
     // --- STUDENT LOGIC ---
     async function fetchStudentsList() {
         const { data } = await supabase.from('students').select('*').order('created_at', { ascending: false });
+        allStudentsData = data || []; // Save to global cache
+        
         const tbody = document.getElementById('studentTableBody');
         tbody.innerHTML = '';
         
-        if (!data || data.length === 0) {
+        if (allStudentsData.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No students enrolled yet.</td></tr>';
         } else {
-            data.forEach(s => {
-                // Ensure default values to prevent undefined errors
+            allStudentsData.forEach(s => {
                 const currentLevel = s.standard || 'Level 0';
+                const currentStatus = s.status || 'Active';
                 
+                // Color coding: Active = Green, Inactive = Gray, Dropout = Red
+                let statusColor = '#28a745';
+                if(currentStatus === 'Inactive') statusColor = '#6c757d';
+                if(currentStatus === 'Dropout') statusColor = '#dc3545';
+
+                // Toggle logic (Disabled if they are a dropout)
+                const toggleAction = currentStatus === 'Active' ? 'Deactivate' : 'Activate';
+                const toggleBtnColor = currentStatus === 'Active' ? '#dc3545' : '#28a745'; 
+                
+                let actionHTML = '';
+                if(currentStatus !== 'Dropout') {
+                    actionHTML = `
+                        <button class="edit-btn" onclick="enableLevelEdit('${s.id}', '${currentLevel}')">Edit Level</button>
+                        <button class="toggle-status-btn" style="background-color: ${toggleBtnColor};" onclick="toggleStudentStatus('${s.id}', '${currentStatus}')">${toggleAction}</button>
+                    `;
+                } else {
+                    actionHTML = `<span style="color:#dc3545; font-size:0.85em; font-weight:bold;">Dropped Out</span>`;
+                }
+
                 tbody.innerHTML += `<tr id="row-${s.id}">
                     <td>${s.first_name} ${s.last_name}</td>
                     <td><b>${s.unique_id}</b></td>
                     <td>${s.dob || '-'}</td>
                     <td id="level-cell-${s.id}">${currentLevel}</td>
-                    <td><span style="color: #28a745; font-weight: bold;">Active</span></td>
-                    <td id="action-cell-${s.id}">
-                        <button class="edit-btn" onclick="enableLevelEdit('${s.id}', '${currentLevel}')">Edit Level</button>
-                    </td>
+                    <td><span style="color: ${statusColor}; font-weight: bold;">${currentStatus}</span></td>
+                    <td id="action-cell-${s.id}">${actionHTML}</td>
                 </tr>`;
             });
         }
-        loadUnassignedStudents();
+        loadUnassignedStudents(); // For Batches
+        loadDropoutStudentDropdown(); // For Dropouts
     }
 
-    // --- INLINE EDITING LOGIC ---
+    async function toggleStudentStatus(studentId, currentStatus) {
+        const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
+        if(!confirm(`Are you sure you want to mark this student as ${newStatus}?`)) return;
+        const { error } = await supabase.from('students').update({ status: newStatus }).eq('id', studentId);
+        if (!error) refreshAllData();
+    }
+
     function enableLevelEdit(studentId, currentLevel) {
         const levelCell = document.getElementById(`level-cell-${studentId}`);
         const actionCell = document.getElementById(`action-cell-${studentId}`);
-        
-        // Generate Dropdown Options
         let optionsHtml = '';
         for(let i=0; i<=10; i++) {
             const levelStr = `Level ${i}`;
             const selected = (levelStr === currentLevel) ? 'selected' : '';
             optionsHtml += `<option value="${levelStr}" ${selected}>${levelStr}</option>`;
         }
-
-        // Swap text for a select dropdown
         levelCell.innerHTML = `<select id="select-level-${studentId}" class="edit-select">${optionsHtml}</select>`;
-        
-        // Swap Edit button for Save/Cancel
         actionCell.innerHTML = `
             <button class="save-btn" onclick="saveLevelEdit('${studentId}')">Save</button>
-            <button class="cancel-btn" onclick="cancelLevelEdit('${studentId}', '${currentLevel}')">Cancel</button>
+            <button class="cancel-btn" onclick="refreshAllData()">Cancel</button>
         `;
-    }
-
-    function cancelLevelEdit(studentId, originalLevel) {
-        // Revert UI back to normal state
-        document.getElementById(`level-cell-${studentId}`).innerHTML = originalLevel;
-        document.getElementById(`action-cell-${studentId}`).innerHTML = `<button class="edit-btn" onclick="enableLevelEdit('${studentId}', '${originalLevel}')">Edit Level</button>`;
     }
 
     async function saveLevelEdit(studentId) {
         const newLevel = document.getElementById(`select-level-${studentId}`).value;
-        
-        const { error } = await supabase
-            .from('students')
-            .update({ standard: newLevel }) // Using 'standard' column to store current level
-            .eq('id', studentId);
-
-        if (error) {
-            alert("Failed to update student level.");
-        } else {
-            // Update UI to show new level
-            cancelLevelEdit(studentId, newLevel);
-        }
+        const { error } = await supabase.from('students').update({ standard: newLevel }).eq('id', studentId);
+        if (!error) refreshAllData();
     }
-
 
     async function registerStudent() {
         const fName = document.getElementById('stuFirstName').value;
@@ -423,25 +441,21 @@
         const { error } = await supabase.from('students').insert([{
             first_name: fName, last_name: lName, dob: dob, unique_id: uniqueId,
             gender: document.getElementById('stuGender').value,
-            standard: document.getElementById('stuStandard').value, // Using standard field for initial level
+            standard: document.getElementById('stuStandard').value, 
             school: document.getElementById('stuSchool').value,
             father_name: document.getElementById('fatherName').value,
             father_mobile: document.getElementById('fatherMobile').value,
             mother_name: document.getElementById('motherName').value,
-            mother_mobile: document.getElementById('motherMobile').value
+            mother_mobile: document.getElementById('motherMobile').value,
+            status: 'Active'
         }]);
 
         if(!error) {
             alert(`Registration successful! ID Generated: ${uniqueId}`);
             closeModal('addStudentModal');
-            
-            // Clear fields
             document.getElementById('stuFirstName').value = '';
             document.getElementById('stuLastName').value = '';
-            
             refreshAllData();
-        } else {
-            alert("Failed to register student.");
         }
     }
 
@@ -454,14 +468,10 @@
         tbody.innerHTML = '';
         dropdown.innerHTML = '<option value="">Select Instructor</option>';
 
-        if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No instructors added yet.</td></tr>';
-        } else {
+        if (data) {
             data.forEach(ci => {
                 tbody.innerHTML += `<tr>
-                    <td>${ci.ci_name}</td>
-                    <td><b>${ci.ci_code}</b></td>
-                    <td>${ci.mobile || '-'}</td>
+                    <td>${ci.ci_name}</td><td><b>${ci.ci_code}</b></td><td>${ci.mobile || '-'}</td>
                     <td><span style="color: #28a745; font-weight: bold;">Active</span></td>
                 </tr>`;
                 dropdown.innerHTML += `<option value="${ci.ci_code}">${ci.ci_name} (${ci.ci_code})</option>`;
@@ -472,7 +482,7 @@
     async function addInstructor() {
         const name = document.getElementById('ciName').value;
         const code = document.getElementById('ciCode').value;
-        if(!name || !code) { alert("Instructor Name and Code are required."); return; }
+        if(!name || !code) return;
 
         const { error } = await supabase.from('course_instructors').insert([{
             ci_name: name, ci_code: code, mobile: document.getElementById('ciMobile').value
@@ -480,9 +490,7 @@
 
         if(!error) { 
             closeModal('addCiModal');
-            document.getElementById('ciName').value = '';
-            document.getElementById('ciCode').value = '';
-            document.getElementById('ciMobile').value = '';
+            document.getElementById('ciName').value = ''; document.getElementById('ciCode').value = '';
             refreshAllData(); 
         }
     }
@@ -492,22 +500,17 @@
         const { data: assigned } = await supabase.from('student_batches').select('student_id');
         const assignedIds = assigned ? assigned.map(a => a.student_id) : [];
 
-        const { data: students } = await supabase.from('students').select('unique_id, first_name, last_name');
         const dropdown = document.getElementById('selectStudents');
         dropdown.innerHTML = '';
         
-        let availableCount = 0;
-        if (students) {
-            students.forEach(s => {
-                if (!assignedIds.includes(s.unique_id)) {
-                    dropdown.innerHTML += `<option value="${s.unique_id}">${s.first_name} ${s.last_name} (${s.unique_id})</option>`;
-                    availableCount++;
-                }
-            });
-        }
-        if (availableCount === 0) {
-            dropdown.innerHTML = '<option value="" disabled>All students are currently assigned to batches.</option>';
-        }
+        let count = 0;
+        allStudentsData.forEach(s => {
+            if (!assignedIds.includes(s.unique_id) && s.status === 'Active') {
+                dropdown.innerHTML += `<option value="${s.unique_id}">${s.first_name} ${s.last_name} (${s.unique_id})</option>`;
+                count++;
+            }
+        });
+        if (count === 0) dropdown.innerHTML = '<option value="" disabled>No eligible students available.</option>';
     }
 
     async function fetchBatchesList() {
@@ -516,21 +519,12 @@
         const tbody = document.getElementById('batchTableBody');
         tbody.innerHTML = '';
 
-        if (!batches || batches.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No batches created yet.</td></tr>';
-        } else {
+        if (batches) {
             batches.forEach(b => {
-                let studentCount = 0;
-                if(enrollments) {
-                    studentCount = enrollments.filter(e => e.batch_id === b.id).length;
-                }
-
+                let studentCount = enrollments ? enrollments.filter(e => e.batch_id === b.id).length : 0;
                 tbody.innerHTML += `<tr>
-                    <td><b>${b.level}</b></td>
-                    <td>${b.batch_day} at ${b.batch_time}</td>
-                    <td>${b.ci_id}</td>
-                    <td>${studentCount} Enrolled</td>
-                    <td><span style="color: #28a745; font-weight: bold;">Active</span></td>
+                    <td><b>${b.level}</b></td><td>${b.batch_day} at ${b.batch_time}</td><td>${b.ci_id}</td>
+                    <td>${studentCount} Enrolled</td><td><span style="color: #28a745; font-weight: bold;">Active</span></td>
                 </tr>`;
             });
         }
@@ -538,36 +532,117 @@
 
     async function createBatch() {
         const selectedStudents = Array.from(document.getElementById('selectStudents').selectedOptions).map(option => option.value);
-        if (selectedStudents.length === 0 || selectedStudents[0] === "") {
-            alert("Please select at least one valid student for the batch.");
-            return;
-        }
+        if (selectedStudents.length === 0 || selectedStudents[0] === "") return;
 
         const day = document.getElementById('batchDay').value;
         const time = document.getElementById('batchTime').value;
         const level = document.getElementById('batchLevel').value;
         const ci = document.getElementById('assignCi').value;
-        
-        if(!day || !time || !level || !ci) { alert("Batch Day, Time, Level, and Instructor are required."); return; }
+        if(!day || !time || !level || !ci) return;
 
         const { data: batchData, error: batchError } = await supabase.from('batches').insert([{
             batch_day: day, batch_time: time, level: level, ci_id: ci
         }]).select();
 
-        if (batchError) { alert("Batch creation failed"); return; }
+        if (batchError) return;
 
-        const batchId = batchData[0].id;
-        const enrollmentData = selectedStudents.map(sId => ({ student_id: sId, batch_id: batchId }));
+        const enrollmentData = selectedStudents.map(sId => ({ student_id: sId, batch_id: batchData[0].id }));
         const { error: enrollError } = await supabase.from('student_batches').insert(enrollmentData);
 
         if (!enrollError) {
             closeModal('addBatchModal');
-            document.getElementById('batchDay').value = '';
-            document.getElementById('batchTime').value = '';
-            document.getElementById('batchLevel').value = '';
-            document.getElementById('assignCi').value = '';
+            document.getElementById('batchDay').value = ''; document.getElementById('batchTime').value = '';
+            document.getElementById('batchLevel').value = ''; document.getElementById('assignCi').value = '';
             refreshAllData();
         }
+    }
+
+    // --- DROPOUT LOGIC ---
+    function loadDropoutStudentDropdown() {
+        const dropdown = document.getElementById('dropoutStudent');
+        dropdown.innerHTML = '<option value="">Select a Student</option>';
+        allStudentsData.forEach(s => {
+            // Only show students who haven't already dropped out
+            if(s.status !== 'Dropout') {
+                dropdown.innerHTML += `<option value="${s.unique_id}">${s.first_name} ${s.last_name} (${s.unique_id})</option>`;
+            }
+        });
+    }
+
+    function autoFillDropoutLevel() {
+        const selectedId = document.getElementById('dropoutStudent').value;
+        const student = allStudentsData.find(s => s.unique_id === selectedId);
+        if (student) {
+            document.getElementById('dropoutLevel').value = student.standard || 'Level 0';
+        } else {
+            document.getElementById('dropoutLevel').value = '';
+        }
+    }
+
+    function toggleOtherReason() {
+        const reason = document.getElementById('dropoutReason').value;
+        const otherDiv = document.getElementById('otherReasonDiv');
+        if(reason === 'Other') {
+            otherDiv.style.display = 'block';
+        } else {
+            otherDiv.style.display = 'none';
+            document.getElementById('dropoutOtherReason').value = '';
+        }
+    }
+
+    async function fetchDropoutsList() {
+        const { data } = await supabase.from('dropouts').select('*').order('created_at', { ascending: false });
+        const tbody = document.getElementById('dropoutTableBody');
+        tbody.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No dropouts recorded.</td></tr>';
+        } else {
+            data.forEach(d => {
+                const dateRecorded = new Date(d.created_at).toLocaleDateString();
+                tbody.innerHTML += `<tr>
+                    <td><b>${d.student_id}</b></td>
+                    <td>${d.level}</td>
+                    <td><span style="color: #dc3545; font-weight: bold;">${d.reason}</span></td>
+                    <td>${d.other_reason || '-'}</td>
+                    <td>${dateRecorded}</td>
+                </tr>`;
+            });
+        }
+    }
+
+    async function recordDropout() {
+        const studentId = document.getElementById('dropoutStudent').value;
+        const level = document.getElementById('dropoutLevel').value;
+        const reason = document.getElementById('dropoutReason').value;
+        const otherReason = document.getElementById('dropoutOtherReason').value;
+
+        if(!studentId || !reason) { alert("Please select a student and a reason."); return; }
+        if(reason === 'Other' && !otherReason) { alert("Please specify the reason."); return; }
+
+        // 1. Log to dropouts table for MF analytics
+        const { error: dropError } = await supabase.from('dropouts').insert([{
+            student_id: studentId,
+            level: level,
+            reason: reason,
+            other_reason: reason === 'Other' ? otherReason : ''
+        }]);
+
+        if (dropError) { alert("Failed to record dropout."); return; }
+
+        // 2. Change student status to 'Dropout' so they disappear from active lists
+        await supabase.from('students').update({ status: 'Dropout' }).eq('unique_id', studentId);
+
+        alert("Student successfully marked as Dropout.");
+        
+        // Reset form
+        document.getElementById('dropoutStudent').value = '';
+        document.getElementById('dropoutLevel').value = '';
+        document.getElementById('dropoutReason').value = '';
+        document.getElementById('dropoutOtherReason').value = '';
+        document.getElementById('otherReasonDiv').style.display = 'none';
+
+        refreshAllData(); // This refreshes ALL tables, including moving the student to the dropout UI
     }
 </script>
 </body>
