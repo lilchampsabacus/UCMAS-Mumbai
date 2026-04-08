@@ -42,7 +42,7 @@
         .pdf-total { text-align: right; font-size: 1.2em; font-weight: bold; color: #2f3c88; }
 
         /* ========================================= */
-        /* NEW: PRINT STYLES FOR NATIVE PDF CREATION */
+        /* PRINT STYLES FOR NATIVE PDF CREATION */
         /* ========================================= */
         @media print {
             /* Hide the main dashboard UI */
@@ -84,7 +84,7 @@
 <body>
 
 <div class="glass-panel header" style="border-radius: 0 0 16px 16px;">
-    <h2 style="margin: 0;">Unit Franchise Dashboard</h2>
+    <h2 id="welcomeMessage" style="margin: 0;">Unit Franchise Dashboard</h2>
     <a href="index.html">Logout</a>
 </div>
 
@@ -188,30 +188,47 @@
 </div>
 
 <script>
-    // Database Initialization
-    const supabaseUrl = 'https://jugzuutcnxcipoyawhbq.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1Z3p1dXRjbnhjaXBveWF3aGJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mjg5OTgsImV4cCI6MjA5MTIwNDk5OH0.HzkuDQ8Yi5rq5ZP95xx8oxC1GCNcUr1kGs5F-psu95I';
-    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    // Variables declared using var to prevent redeclaration errors
+    var supabaseUrl = 'https://jugzuutcnxcipoyawhbq.supabase.co';
+    var supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1Z3p1dXRjbnhjaXBveWF3aGJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mjg5OTgsImV4cCI6MjA5MTIwNDk5OH0.HzkuDQ8Yi5rq5ZP95xx8oxC1GCNcUr1kGs5F-psu95I';
+    var supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    var currentUser = null;
 
-    window.onload = function() {
+    window.onload = async function() {
+        // Authenticate the user
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error || !user) {
+            window.location.href = 'index.html'; // Redirect if not logged in
+            return;
+        }
+        currentUser = user;
+
+        // Fetch UF Details for Welcome Message
+        const { data: ufData } = await supabase
+            .from('unit_franchises')
+            .select('uf_name, uf_code')
+            .eq('email', currentUser.email)
+            .single();
+
+        if (ufData && document.getElementById('welcomeMessage')) {
+            document.getElementById('welcomeMessage').innerText = `Welcome, ${ufData.uf_name} (${ufData.uf_code})`;
+        }
+
         fetchLevel1Students();
     };
 
     // Fetch ONLY Active Level 1 Students OWNED by the current UF
     async function fetchLevel1Students() {
-        // Authenticate the user first
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return; // Stop if not logged in
+        if (!currentUser) return;
 
         const dropdown = document.getElementById('ptStudent');
         
-        // Filter by Active, Level 1, AND created_by
         const { data, error } = await supabase
             .from('students')
             .select('unique_id, first_name, last_name, standard')
             .eq('status', 'Active')
             .eq('standard', 'Level 1')
-            .eq('created_by', user.id); 
+            .eq('created_by', currentUser.id); 
 
         dropdown.innerHTML = '';
 
