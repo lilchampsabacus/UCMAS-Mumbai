@@ -32,7 +32,7 @@
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(0, 0, 0, 0.1); }
         th { background-color: rgba(47, 60, 136, 0.1); font-weight: 600; color: #2f3c88; }
         
-        /* PDF specific styles to ensure it looks clean when downloaded */
+        /* PDF specific styles */
         #pdfContent { background: white; padding: 40px; border-radius: 8px; color: #333; }
         .pdf-header { text-align: center; border-bottom: 2px solid #2f3c88; padding-bottom: 15px; margin-bottom: 20px; }
         .pdf-header h2 { color: #2f3c88; margin: 0 0 5px 0; }
@@ -81,7 +81,7 @@
                 </select>
             </div>
             <div>
-                <label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Start Month & Year</label>
+                <label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Start Month & Year (Base Admission)</label>
                 <input type="month" id="ptStartMonth" required>
             </div>
             <div>
@@ -140,7 +140,6 @@
             </div>
             <p style="text-align: center; margin-top: 30px; font-size: 0.85em; color: #888;">
                 * Fees are calculated based on a 12-month academic cycle.<br>
-                * May month will be Holiday.<br>
                 * Kit fee is a one-time charge applicable only in Year 1.
             </p>
         </div>
@@ -164,12 +163,11 @@
     async function fetchLevel1Students() {
         const dropdown = document.getElementById('ptStudent');
         
-        // Fetch active students specifically in Level 1
         const { data, error } = await supabase
             .from('students')
             .select('unique_id, first_name, last_name, standard')
             .eq('status', 'Active')
-            .eq('standard', 'Level 1'); // Filter logic requested
+            .eq('standard', 'Level 1'); 
 
         dropdown.innerHTML = '';
 
@@ -195,7 +193,7 @@
         const freqText = freqSelect.options[freqSelect.selectedIndex].text;
 
         if(!student || !startMonthStr) {
-            alert("Please select a student and a starting month.");
+            alert("Please select a student and a starting base month.");
             return;
         }
 
@@ -207,7 +205,12 @@
 
         // Months between each installment
         const monthsStep = 12 / numInstallments; 
+        
+        // Parse the base date
         let startDate = new Date(startMonthStr + "-01");
+        
+        // Academic Year Offset Fix
+        startDate.setFullYear(startDate.getFullYear() + (year - 1));
 
         // --- RENDER PDF CONTENT ---
         document.getElementById('pdfGenDate').innerText = new Date().toLocaleDateString();
@@ -220,11 +223,9 @@
         tbody.innerHTML = '';
 
         for(let i = 1; i <= numInstallments; i++) {
-            // First installment gets the kit fee if it's Year 1
             let currentKitFee = (i === 1) ? kitFee : 0;
             let totalRowAmount = baseInstallment + currentKitFee;
 
-            // Format Month and Year (e.g. "June 2026")
             let monthName = startDate.toLocaleString('default', { month: 'long' });
             let yearNum = startDate.getFullYear();
 
@@ -238,28 +239,31 @@
                 </tr>
             `;
 
-            // Step forward to the next billing month
+            // Step forward to the next billing month based on frequency
             startDate.setMonth(startDate.getMonth() + monthsStep);
         }
 
-        // Reveal the planner
         document.getElementById('plannerDisplay').style.display = 'block';
     }
 
     // Function to convert the HTML div into a downloadable PDF
     function downloadPDF() {
-        const studentName = document.getElementById('pdfStudentName').innerText.split(' ')[0]; // Get first name for filename
+        const studentName = document.getElementById('pdfStudentName').innerText.split(' ')[0]; 
         const element = document.getElementById('pdfContent');
         
+        // Robust options to prevent cutoff and backdrop-filter issues
         const opt = {
-            margin:       10,
+            margin:       [0.5, 0.5, 0.5, 0.5], // 0.5 inch margins all around
             filename:     `UCMAS_Fee_Planner_${studentName}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2 },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            image:        { type: 'jpeg', quality: 1 },
+            html2canvas:  { 
+                scale: 2, 
+                useCORS: true,
+                backgroundColor: '#ffffff' // Forces a white background, fixing transparency cutoff issues
+            },
+            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
         };
 
-        // Generate and save
         html2pdf().set(opt).from(element).save();
     }
 </script>
