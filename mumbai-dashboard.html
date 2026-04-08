@@ -191,7 +191,7 @@
 <script>
     const supabaseUrl = 'https://jugzuutcnxcipoyawhbq.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1Z3p1dXRjbnhjaXBveWF3aGJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mjg5OTgsImV4cCI6MjA5MTIwNDk5OH0.HzkuDQ8Yi5rq5ZP95xx8oxC1GCNcUr1kGs5F-psu95I';
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     const modal = document.getElementById("addUfModal");
     function openModal() { modal.style.display = "flex"; }
