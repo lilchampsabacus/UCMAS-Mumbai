@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unit Dashboard - CBS</title>
+    <title>Unit Dashboard - CBS Mumbai</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { 
             margin: 0; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            /* Matching background from index and master dashboard */
             background: linear-gradient(135deg, #f95d6a 0%, #ffffff 50%, #2f3c88 100%);
             background-attachment: fixed;
             color: #333;
@@ -36,44 +35,30 @@
         }
 
         .header a { color: #2f3c88; text-decoration: none; font-weight: bold; margin-left: 20px;}
-        .header a:hover { text-decoration: underline; }
 
         .container { padding: 0 40px; max-width: 1200px; margin: auto; }
 
-        /* Tabs Styling */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;
+        }
+        .stat-card {
+            padding: 20px; text-align: center; color: #2f3c88; transition: transform 0.3s;
+        }
+        .stat-card h3 { margin-top: 0; font-size: 1.1em; opacity: 0.9; font-weight: bold;}
+        .stat-card h2 { margin-bottom: 0; font-size: 2.5em; font-weight: bold; }
+
         .tab-bar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            background: rgba(255, 255, 255, 0.3);
-            padding: 10px;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            display: flex; gap: 10px; margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.3); padding: 10px; border-radius: 12px;
+            backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5);
         }
         .tab-btn {
-            background: transparent;
-            border: none;
-            padding: 12px 24px;
-            font-size: 1.05em;
-            font-weight: bold;
-            color: #2f3c88;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: 0.3s;
+            background: transparent; border: none; padding: 12px 24px; font-size: 1.05em;
+            font-weight: bold; color: #2f3c88; cursor: pointer; border-radius: 8px; transition: 0.3s;
         }
-        .tab-btn:hover { background: rgba(255, 255, 255, 0.5); }
-        .tab-btn.active {
-            background: #2f3c88;
-            color: white;
-            box-shadow: 0 4px 10px rgba(47, 60, 136, 0.3);
-        }
+        .tab-btn.active { background: #2f3c88; color: white; box-shadow: 0 4px 10px rgba(47, 60, 136, 0.3); }
 
-        /* Tab Content Styling */
-        .tab-content {
-            display: none; /* Hidden by default */
-            animation: fadeIn 0.4s ease-in-out;
-        }
+        .tab-content { display: none; animation: fadeIn 0.4s ease-in-out; }
         .tab-content.active { display: block; }
         
         @keyframes fadeIn {
@@ -82,34 +67,27 @@
         }
 
         .form-section { 
-            background: rgba(255, 255, 255, 0.85); /* Slightly opaque for readability */
-            padding: 30px; 
-            border-radius: 16px; 
-            margin-bottom: 30px; 
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1); 
+            background: rgba(255, 255, 255, 0.85); padding: 30px; border-radius: 16px; 
+            margin-bottom: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); 
             border: 1px solid rgba(255, 255, 255, 0.6);
         }
 
         h3 { border-bottom: 2px solid rgba(47, 60, 136, 0.1); padding-bottom: 10px; color: #2f3c88; margin-top: 0;}
-        
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         
         input, select { 
             width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;
             background: white; color: #333; font-family: inherit;
         }
-        input:focus, select:focus { outline: none; border-color: #2f3c88; box-shadow: 0 0 5px rgba(47, 60, 136, 0.3); }
         
+        /* Multi-select styling */
+        select[multiple] { height: 120px; }
+
         button.action-btn { 
             background-color: #f95d6a; color: white; border: none; font-weight: bold; cursor: pointer; 
-            margin-top: 20px; padding: 12px; border-radius: 8px; font-size: 1.05em; transition: 0.3s;
-            width: 100%;
-            box-shadow: 0 4px 15px rgba(249, 93, 106, 0.4);
+            margin-top: 20px; padding: 12px; border-radius: 8px; font-size: 1.05em; transition: 0.3s; width: 100%;
         }
-        button.action-btn:hover { background-color: #e04a57; }
-        button.action-btn.blue { background-color: #2f3c88; box-shadow: 0 4px 15px rgba(47, 60, 136, 0.4); }
-        button.action-btn.blue:hover { background-color: #1f285e; }
-
+        button.action-btn.blue { background-color: #2f3c88; }
     </style>
 </head>
 <body>
@@ -123,7 +101,12 @@
 </div>
 
 <div class="container">
-    
+    <div class="stats-grid">
+        <div class="glass-panel stat-card"><h3>Total Students</h3><h2 id="totalStudents">0</h2></div>
+        <div class="glass-panel stat-card"><h3>Course Instructors</h3><h2 id="totalCIs">0</h2></div>
+        <div class="glass-panel stat-card"><h3>Active Batches</h3><h2 id="totalBatches">0</h2></div>
+    </div>
+
     <div class="tab-bar">
         <button class="tab-btn active" onclick="openTab(event, 'tab-students')">Student Registration</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-instructors')">Course Instructors</button>
@@ -134,23 +117,23 @@
         <div class="form-section">
             <h3>Add New Student</h3>
             <div class="grid-2">
-                <input type="text" id="stuFirstName" placeholder="Student First Name" required>
-                <input type="text" id="stuLastName" placeholder="Student Last Name" required>
-                <input type="date" id="stuDob" required title="Date of Birth">
+                <input type="text" id="stuFirstName" placeholder="Student First Name">
+                <input type="text" id="stuLastName" placeholder="Student Last Name">
+                <input type="date" id="stuDob" title="Date of Birth">
                 <select id="stuGender">
                     <option value="">Select Gender</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                 </select>
-                <input type="text" id="stuStandard" placeholder="Standard (e.g. 5th Grade)">
+                <input type="text" id="stuStandard" placeholder="Standard">
                 <input type="text" id="stuSchool" placeholder="School Name">
                 <input type="text" id="fatherName" placeholder="Father's Name">
-                <input type="tel" id="fatherMobile" placeholder="Father's Mobile No.">
+                <input type="tel" id="fatherMobile" placeholder="Father's Mobile">
                 <input type="text" id="motherName" placeholder="Mother's Name">
-                <input type="tel" id="motherMobile" placeholder="Mother's Mobile No.">
+                <input type="tel" id="motherMobile" placeholder="Mother's Mobile">
             </div>
-            <button class="action-btn" onclick="registerStudent()">Register Student & Generate ID</button>
-            <p id="generatedIdDisplay" style="color: #28a745; font-weight: bold; text-align: center; margin-top: 20px; font-size: 1.2em;"></p>
+            <button class="action-btn" onclick="registerStudent()">Register & Generate ID</button>
+            <p id="generatedIdDisplay" style="color: #28a745; font-weight: bold; text-align: center; margin-top: 20px;"></p>
         </div>
     </div>
 
@@ -158,11 +141,11 @@
         <div class="form-section">
             <h3>Course Instructor (CI) Creation</h3>
             <div class="grid-2">
-                <input type="text" id="ciName" placeholder="Instructor Full Name">
-                <input type="text" id="ciCode" placeholder="Instructor Code (e.g. CI-01)">
+                <input type="text" id="ciName" placeholder="Instructor Name">
+                <input type="text" id="ciCode" placeholder="Instructor Code">
                 <input type="tel" id="ciMobile" placeholder="Mobile Number">
             </div>
-            <button class="action-btn blue" onclick="addInstructor()">Assign Instructor to UF</button>
+            <button class="action-btn blue" onclick="addInstructor()">Save Instructor</button>
         </div>
     </div>
 
@@ -170,92 +153,156 @@
         <div class="form-section">
             <h3>Batch Creation</h3>
             <div class="grid-2">
-                <select id="batchDay">
-                    <option value="">Select Batch Day</option>
-                    <option value="Monday">Monday</option>
-                    <option value="Saturday">Saturday</option>
-                    <option value="Sunday">Sunday</option>
-                </select>
-                <input type="time" id="batchTime" title="Batch Time">
-                <select id="batchLevel">
-                    <option value="">Select Level</option>
-                    <option value="Foundation">Foundation</option>
-                    <option value="Level 1">Level 1</option>
-                    <option value="Level 2">Level 2</option>
-                </select>
-                <input type="date" id="startDate" title="Start Date">
-                <select id="assignCi">
-                    <option value="">Assign Course Instructor</option>
-                    <option value="CI-01">Nikhil Kamble (Demo)</option>
-                </select>
+                <div>
+                    <label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Assign Instructor</label>
+                    <select id="assignCi"><option value="">Loading Instructors...</option></select>
+                    
+                    <label style="display:block; margin:15px 0 5px; font-weight:bold; color:#2f3c88;">Batch Details</label>
+                    <select id="batchDay">
+                        <option value="">Select Day</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Saturday">Saturday</option>
+                        <option value="Sunday">Sunday</option>
+                    </select>
+                    <input type="time" id="batchTime" style="margin-top:10px;">
+                    <select id="batchLevel" style="margin-top:10px;">
+                        <option value="">Select Level</option>
+                        <option value="Foundation">Foundation</option>
+                        <option value="Level 1">Level 1</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="display:block; margin-bottom:5px; font-weight:bold; color:#2f3c88;">Select Students (Hold Ctrl to select multiple)</label>
+                    <select id="selectStudents" multiple>
+                        <option value="">Loading Students...</option>
+                    </select>
+                    <p style="font-size: 0.85em; color: #666; margin-top: 5px;">Only students registered in this center appear here.</p>
+                </div>
             </div>
-            <button class="action-btn blue" onclick="createBatch()">Create Batch</button>
+            <button class="action-btn blue" onclick="createBatch()">Create Batch & Enroll Students</button>
         </div>
     </div>
-
 </div>
 
 <script>
-    // Supabase Initialization
     const supabaseUrl = 'https://jugzuutcnxcipoyawhbq.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1Z3p1dXRjbnhjaXBveWF3aGJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mjg5OTgsImV4cCI6MjA5MTIwNDk5OH0.HzkuDQ8Yi5rq5ZP95xx8oxC1GCNcUr1kGs5F-psu95I';
     supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    // --- Tab Navigation Logic ---
+    window.onload = function() {
+        refreshAllData();
+    };
+
+    function refreshAllData() {
+        loadDashboardStats();
+        loadInstructors();
+        loadStudentsIntoDropdown();
+    }
+
     function openTab(evt, tabId) {
-        // Hide all tab contents
-        const tabContents = document.getElementsByClassName("tab-content");
-        for (let i = 0; i < tabContents.length; i++) {
-            tabContents[i].classList.remove("active");
-        }
-        // Remove active class from all buttons
-        const tabBtns = document.getElementsByClassName("tab-btn");
-        for (let i = 0; i < tabBtns.length; i++) {
-            tabBtns[i].classList.remove("active");
-        }
-        // Show current tab and add active class to button
+        const contents = document.getElementsByClassName("tab-content");
+        for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
+        const btns = document.getElementsByClassName("tab-btn");
+        for (let i = 0; i < btns.length; i++) btns[i].classList.remove("active");
         document.getElementById(tabId).classList.add("active");
         evt.currentTarget.classList.add("active");
     }
 
-    // --- Student Registration Logic ---
+    async function loadDashboardStats() {
+        const { count: sCount } = await supabase.from('students').select('*', { count: 'exact', head: true });
+        const { count: cCount } = await supabase.from('course_instructors').select('*', { count: 'exact', head: true });
+        const { count: bCount } = await supabase.from('batches').select('*', { count: 'exact', head: true });
+        document.getElementById('totalStudents').innerText = sCount || 0;
+        document.getElementById('totalCIs').innerText = cCount || 0;
+        document.getElementById('totalBatches').innerText = bCount || 0;
+    }
+
+    async function loadInstructors() {
+        const { data } = await supabase.from('course_instructors').select('ci_code, ci_name');
+        const dropdown = document.getElementById('assignCi');
+        dropdown.innerHTML = '<option value="">Select Instructor</option>';
+        if (data) data.forEach(ci => {
+            dropdown.innerHTML += `<option value="${ci.ci_code}">${ci.ci_name}</option>`;
+        });
+    }
+
+    async function loadStudentsIntoDropdown() {
+        const { data } = await supabase.from('students').select('unique_id, first_name, last_name');
+        const dropdown = document.getElementById('selectStudents');
+        dropdown.innerHTML = '';
+        if (data) data.forEach(s => {
+            dropdown.innerHTML += `<option value="${s.unique_id}">${s.first_name} ${s.last_name} (${s.unique_id})</option>`;
+        });
+    }
+
     async function registerStudent() {
-        try {
-            const fName = document.getElementById('stuFirstName').value;
-            const lName = document.getElementById('stuLastName').value;
-            const dob = document.getElementById('stuDob').value;
-            
-            if(!fName || !lName || !dob) {
-                alert("Please fill in the student's First Name, Last Name, and Date of Birth at minimum.");
-                return;
-            }
+        const fName = document.getElementById('stuFirstName').value;
+        const lName = document.getElementById('stuLastName').value;
+        const dob = document.getElementById('stuDob').value;
+        if(!fName || !lName || !dob) { alert("Basic details required"); return; }
 
-            // ID Generation Logic (e.g., kk02170001)
-            const letter1 = fName.charAt(0).toLowerCase();
-            const letter2 = lName.charAt(0).toLowerCase(); 
-            const dateObj = new Date(dob);
-            const day = String(dateObj.getDate()).padStart(2, '0');
-            const yearStr = String(dateObj.getFullYear()).slice(-2);
-            
-            const prefix = `${letter1}${letter2}${day}${yearStr}`;
-            
-            // Demo logic for sequence number (In production, query DB for max sequence of this prefix)
-            let sequence = 1; 
-            const newUniqueId = `${prefix}${String(sequence).padStart(4, '0')}`;
+        const prefix = `${fName.charAt(0).toLowerCase()}${lName.charAt(0).toLowerCase()}${new Date(dob).getDate().toString().padStart(2,'0')}${new Date(dob).getFullYear().toString().slice(-2)}`;
+        const { count } = await supabase.from('students').select('*', { count: 'exact', head: true }).like('unique_id', `${prefix}%`);
+        const uniqueId = `${prefix}${((count || 0) + 1).toString().padStart(4, '0')}`;
 
-            document.getElementById('generatedIdDisplay').innerText = `✅ Student successfully registered! Unique ID: ${newUniqueId}`;
-            
-        } catch (error) {
-            alert("An issue occurred while saving the details. Please try again.");
+        const { error } = await supabase.from('students').insert([{
+            first_name: fName, last_name: lName, dob: dob, unique_id: uniqueId,
+            gender: document.getElementById('stuGender').value,
+            standard: document.getElementById('stuStandard').value,
+            school: document.getElementById('stuSchool').value,
+            father_name: document.getElementById('fatherName').value,
+            father_mobile: document.getElementById('fatherMobile').value,
+            mother_name: document.getElementById('motherName').value,
+            mother_mobile: document.getElementById('motherMobile').value
+        }]);
+
+        if(!error) {
+            document.getElementById('generatedIdDisplay').innerText = `ID Generated: ${uniqueId}`;
+            refreshAllData();
         }
     }
 
-    function addInstructor() { 
-        alert("Instructor successfully assigned to your franchise."); 
+    async function addInstructor() {
+        const { error } = await supabase.from('course_instructors').insert([{
+            ci_name: document.getElementById('ciName').value,
+            ci_code: document.getElementById('ciCode').value,
+            mobile: document.getElementById('ciMobile').value
+        }]);
+        if(!error) { alert("Instructor Saved"); refreshAllData(); }
     }
-    
-    function createBatch() { 
-        alert("Batch successfully created."); 
+
+    async function createBatch() {
+        const selectedStudents = Array.from(document.getElementById('selectStudents').selectedOptions).map(option => option.value);
+        
+        if (selectedStudents.length === 0) {
+            alert("Please select at least one student for the batch.");
+            return;
+        }
+
+        // 1. Create the Batch
+        const { data: batchData, error: batchError } = await supabase.from('batches').insert([{
+            batch_day: document.getElementById('batchDay').value,
+            batch_time: document.getElementById('batchTime').value,
+            level: document.getElementById('batchLevel').value,
+            ci_id: document.getElementById('assignCi').value
+        }]).select();
+
+        if (batchError) { alert("Batch creation failed"); return; }
+
+        // 2. Link Students to the new Batch ID
+        const batchId = batchData[0].id;
+        const enrollmentData = selectedStudents.map(sId => ({
+            student_id: sId,
+            batch_id: batchId
+        }));
+
+        const { error: enrollError } = await supabase.from('student_batches').insert(enrollmentData);
+
+        if (!enrollError) {
+            alert(`Batch created and ${selectedStudents.length} students enrolled!`);
+            refreshAllData();
+        }
     }
 </script>
 </body>
