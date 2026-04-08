@@ -15,7 +15,6 @@
             min-height: 100vh;
         }
 
-        /* Glassmorphism CSS */
         .glass-panel {
             background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(12px);
@@ -68,7 +67,6 @@
             color: #2f3c88;
             transition: transform 0.3s;
         }
-        .stat-card:hover { transform: translateY(-5px); }
         .stat-card h3 { margin-top: 0; font-size: 1.1em; opacity: 0.9; font-weight: bold;}
         .stat-card h2 { margin-bottom: 0; font-size: 2.5em; font-weight: bold; }
 
@@ -90,7 +88,6 @@
         }
         tr:hover { background-color: rgba(255, 255, 255, 0.3); }
 
-        /* Buttons */
         .btn {
             padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; 
             font-weight: bold; color: white; transition: 0.3s;
@@ -101,7 +98,6 @@
         .btn-enable { background-color: rgba(40, 167, 69, 0.9); }
         .btn-disable { background-color: rgba(220, 53, 69, 0.9); }
 
-        /* Modal Styles */
         .modal {
             display: none; position: fixed; z-index: 100; left: 0; top: 0;
             width: 100%; height: 100%; overflow: auto;
@@ -112,7 +108,7 @@
         .modal-content {
             padding: 30px; width: 100%; max-width: 400px;
             color: #2f3c88;
-            background: rgba(255, 255, 255, 0.85); /* Slightly less transparent for readability */
+            background: rgba(255, 255, 255, 0.85); 
         }
         .modal-content h3 { margin-top: 0; border-bottom: 1px solid rgba(47, 60, 136, 0.2); padding-bottom: 10px;}
         .form-group { margin-bottom: 15px; }
@@ -138,10 +134,10 @@
 
 <div class="container">
     <div class="stats-grid">
-        <div class="glass-panel stat-card"><h3>Total UFs</h3><h2 id="totalUf">1</h2></div>
-        <div class="glass-panel stat-card"><h3>Total Students</h3><h2 id="totalStudents">120</h2></div>
-        <div class="glass-panel stat-card"><h3>Active Students</h3><h2 id="activeStudents">115</h2></div>
-        <div class="glass-panel stat-card"><h3>Dropouts</h3><h2 id="dropouts">5</h2></div>
+        <div class="glass-panel stat-card"><h3>Total UFs</h3><h2 id="totalUf">0</h2></div>
+        <div class="glass-panel stat-card"><h3>Total Students</h3><h2 id="totalStudents">0</h2></div>
+        <div class="glass-panel stat-card"><h3>Active Students</h3><h2 id="activeStudents">0</h2></div>
+        <div class="glass-panel stat-card"><h3>Dropouts</h3><h2 id="dropouts">0</h2></div>
     </div>
 
     <div class="action-bar">
@@ -162,14 +158,7 @@
                 </tr>
             </thead>
             <tbody id="ufTableBody">
-                <tr>
-                    <td>Demo Center Andheri</td>
-                    <td>UF-AND-01</td>
-                    <td>Andheri East</td>
-                    <td>120</td>
-                    <td><span style="color: #28a745; font-weight: bold;">Active</span></td>
-                    <td><button class="btn btn-toggle btn-disable">Disable</button></td>
-                </tr>
+                <tr><td colspan="6" style="text-align: center;">Loading franchise data...</td></tr>
             </tbody>
         </table>
     </div>
@@ -200,12 +189,10 @@
 </div>
 
 <script>
-    // Supabase initialization
     const supabaseUrl = 'https://jugzuutcnxcipoyawhbq.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1Z3p1dXRjbnhjaXBveWF3aGJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mjg5OTgsImV4cCI6MjA5MTIwNDk5OH0.HzkuDQ8Yi5rq5ZP95xx8oxC1GCNcUr1kGs5F-psu95I';
-    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    // Modal Logic
     const modal = document.getElementById("addUfModal");
     function openModal() { modal.style.display = "flex"; }
     function closeModal() { modal.style.display = "none"; }
@@ -214,7 +201,43 @@
         if (event.target == modal) { closeModal(); }
     }
 
-    // Real Supabase Submission Logic
+    // Load actual data when the page loads
+    window.onload = fetchDashboardData;
+
+    async function fetchDashboardData() {
+        // Fetch rows from the new database table
+        const { data, error } = await supabase.from('unit_franchises').select('*').order('created_at', { ascending: false });
+        
+        if (error) {
+            document.getElementById('ufTableBody').innerHTML = `<tr><td colspan="6" style="text-align: center; color: red;">Could not load data.</td></tr>`;
+            return;
+        }
+
+        // Update the dashboard counter
+        document.getElementById('totalUf').innerText = data.length;
+
+        // Clear the table and populate it with real data
+        const tbody = document.getElementById('ufTableBody');
+        tbody.innerHTML = ''; 
+
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center;">No Unit Franchises found. Add one to get started!</td></tr>`;
+            return;
+        }
+
+        data.forEach(uf => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${uf.uf_name}</td>
+                <td>${uf.uf_code}</td>
+                <td>${uf.area}</td>
+                <td>0</td> <td><span style="color: #28a745; font-weight: bold;">${uf.status}</span></td>
+                <td><button class="btn btn-toggle btn-disable">Disable</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
     async function submitNewUF() {
         const name = document.getElementById('newUfName').value;
         const code = document.getElementById('newUfCode').value;
@@ -225,9 +248,6 @@
             return;
         }
 
-        // ULTRA-STRICT SANITIZATION: 
-        // /[^a-z0-9]/g strips out absolutely everything except lowercase letters and numbers.
-        // This guarantees no hidden characters, dashes, or symbols can break the email.
         const cleanCode = code.toLowerCase().replace(/[^a-z0-9]/g, '');
         const generatedEmail = `${cleanCode}@cbs.in`;
         const generatedPassword = "Welcome@123";
@@ -237,26 +257,35 @@
         btn.innerText = "Creating...";
 
         try {
-            // ACTUAL SUPABASE BACKEND CALL
-            const { data, error } = await supabase.auth.signUp({
+            // 1. Create the user authentication
+            const { error: authError } = await supabase.auth.signUp({
                 email: generatedEmail,
                 password: generatedPassword,
             });
 
-            if (error) {
-                // If it fails, show the EXACT error message from Supabase for easy debugging
-                if (error.message.includes("already registered") || error.status === 422) {
+            if (authError) {
+                if (authError.message.includes("already registered") || authError.status === 422) {
                     alert("User already existed.");
                 } else {
-                    alert(`Supabase Error: ${error.message}`);
+                    alert("An issue occurred while setting up login credentials. Please try again.");
                 }
                 return;
             }
 
-            // Show generated credentials
+            // 2. Save the details to our new database table
+            const { error: dbError } = await supabase.from('unit_franchises').insert([
+                { uf_name: name, uf_code: code, area: area, email: generatedEmail }
+            ]);
+
+            if (dbError) {
+                alert("Account created, but there was an issue linking it to the dashboard.");
+                return;
+            }
+
             alert(`Franchise created successfully!\n\nLogin Email: ${generatedEmail}\nDefault Password: ${generatedPassword}`);
             
             closeModal();
+            fetchDashboardData(); // Automatically refresh the table!
             
             // Clear fields
             document.getElementById('newUfName').value = '';
@@ -264,7 +293,7 @@
             document.getElementById('newUfArea').value = '';
 
         } catch (error) {
-            alert(`Unexpected Error: ${error.message}`);
+            alert("An unexpected issue occurred. Please try again.");
         } finally {
             btn.innerText = originalText;
         }
