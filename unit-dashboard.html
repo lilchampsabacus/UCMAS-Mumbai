@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Unit Dashboard - CBS</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f95d6a 0%, #ffffff 50%, #2f3c88 100%); background-attachment: fixed; color: #333; min-height: 100vh; }
         .glass-panel { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 16px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15); }
@@ -22,7 +23,7 @@
         .tab-bar { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(255, 255, 255, 0.95); padding: 12px 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); align-items: center; flex-wrap: wrap; }
         .tab-btn, .tab-link { background: transparent; border: none; padding: 10px 20px; font-size: 0.95em; font-weight: bold; color: #6b7280; cursor: pointer; border-radius: 8px; transition: 0.3s; text-decoration: none; display: flex; align-items: center; gap: 8px; }
         .tab-btn:hover, .tab-link:hover { background: rgba(47, 60, 136, 0.08); color: #2f3c88; }
-        .tab-btn.active { background: #2f3c88; color: white; box-shadow: 0 4px 10px rgba(47, 60, 136, 0.3); }
+        .tab-btn.active, .tab-link.active { background: #2f3c88; color: white; box-shadow: 0 4px 10px rgba(47, 60, 136, 0.3); }
         .tab-content { display: none; animation: fadeIn 0.4s ease-in-out; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -55,7 +56,7 @@
 <body>
 
 <div class="glass-panel header" style="border-radius: 0 0 16px 16px;">
-    <h2 style="margin: 0;">Unit Franchise Dashboard</h2>
+    <h2 id="welcomeMessage" style="margin: 0;">Unit Franchise Dashboard</h2>
     <a href="index.html">Logout</a>
 </div>
 
@@ -294,21 +295,32 @@
 </div>
 
 <script>
-    const supabaseUrl = 'https://jugzuutcnxcipoyawhbq.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1Z3p1dXRjbnhjaXBveWF3aGJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mjg5OTgsImV4cCI6MjA5MTIwNDk5OH0.HzkuDQ8Yi5rq5ZP95xx8oxC1GCNcUr1kGs5F-psu95I';
-    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-    
-    let allStudentsData = [];
-    let currentUser = null; // NEW: Store the logged-in UF
+    // Variables declared using var
+    var supabaseUrl = 'https://jugzuutcnxcipoyawhbq.supabase.co';
+    var supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1Z3p1dXRjbnhjaXBveWF3aGJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mjg5OTgsImV4cCI6MjA5MTIwNDk5OH0.HzkuDQ8Yi5rq5ZP95xx8oxC1GCNcUr1kGs5F-psu95I';
+    var supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    var allStudentsData = [];
+    var currentUser = null;
 
     window.onload = async function() { 
-        // NEW: Authenticate and get the current UF's ID
         const { data: { user }, error } = await supabase.auth.getUser();
         if (error || !user) {
-            window.location.href = 'index.html'; // Kick them to login if not authenticated
+            window.location.href = 'index.html';
             return;
         }
         currentUser = user;
+
+        // Fetch UF Details for Welcome Message
+        const { data: ufData } = await supabase
+            .from('unit_franchises')
+            .select('uf_name, uf_code')
+            .eq('email', currentUser.email)
+            .single();
+
+        if (ufData && document.getElementById('welcomeMessage')) {
+            document.getElementById('welcomeMessage').innerText = `Welcome, ${ufData.uf_name} (${ufData.uf_code})`;
+        }
+
         refreshAllData(); 
     };
 
@@ -335,7 +347,6 @@
     window.onclick = function(e) { if (e.target.classList.contains('modal')) e.target.style.display = "none"; }
 
     async function loadDashboardStats() {
-        // NEW: Filter stats by created_by
         const { count: sCount } = await supabase.from('students').select('*', { count: 'exact', head: true }).eq('status', 'Active').eq('created_by', currentUser.id);
         const { count: cCount } = await supabase.from('course_instructors').select('*', { count: 'exact', head: true }).eq('created_by', currentUser.id);
         const { count: bCount } = await supabase.from('batches').select('*', { count: 'exact', head: true }).eq('status', 'Active').eq('created_by', currentUser.id);
@@ -347,7 +358,6 @@
 
     // ================= STUDENTS LOGIC =================
     async function fetchStudentsList() {
-        // NEW: Filter students by created_by
         const { data } = await supabase.from('students').select('*').eq('created_by', currentUser.id).order('created_at', { ascending: false });
         allStudentsData = data || [];
         const tbody = document.getElementById('studentTableBody');
@@ -399,12 +409,9 @@
         if(!fName || !lName || !dob) { alert("First Name, Last Name, and DOB are required"); return; }
 
         const prefix = `${fName.charAt(0).toLowerCase()}${lName.charAt(0).toLowerCase()}${new Date(dob).getDate().toString().padStart(2,'0')}${new Date(dob).getFullYear().toString().slice(-2)}`;
-        
-        // Ensure ID count generation is also isolated to this specific UF (optional, but good practice)
         const { count } = await supabase.from('students').select('*', { count: 'exact', head: true }).eq('created_by', currentUser.id).like('unique_id', `${prefix}%`);
         const uniqueId = `${prefix}${((count || 0) + 1).toString().padStart(4, '0')}`;
 
-        // NEW: Inject created_by into the insert
         const { error } = await supabase.from('students').insert([{
             first_name: fName, last_name: lName, dob: dob, unique_id: uniqueId,
             gender: document.getElementById('stuGender').value,
@@ -459,7 +466,6 @@
 
     // ================= INSTRUCTORS LOGIC =================
     async function fetchInstructorsList() {
-        // NEW: Filter by created_by
         const { data } = await supabase.from('course_instructors').select('*').eq('created_by', currentUser.id).order('created_at', { ascending: false });
         const tbody = document.getElementById('ciTableBody');
         const dropdown = document.getElementById('assignCi');
@@ -478,13 +484,10 @@
         const name = document.getElementById('ciName').value;
         const code = document.getElementById('ciCode').value;
         if(!name || !code) return;
-        
-        // NEW: Inject created_by
         const { error } = await supabase.from('course_instructors').insert([{ 
             ci_name: name, ci_code: code, mobile: document.getElementById('ciMobile').value,
             created_by: currentUser.id
         }]);
-        
         if(!error) { closeModal('addCiModal'); refreshAllData(); }
     }
 
@@ -532,9 +535,8 @@
     }
 
     async function fetchBatchesList() {
-        // NEW: Filter by created_by
         const { data: batches } = await supabase.from('batches').select('*').eq('created_by', currentUser.id).order('created_at', { ascending: false });
-        const { data: enrollments } = await supabase.from('student_batches').select('*'); // This joins fine as batches are filtered
+        const { data: enrollments } = await supabase.from('student_batches').select('*');
         const tbody = document.getElementById('batchTableBody');
         if(!tbody) return;
         
@@ -627,7 +629,6 @@
         
         const expectedEndDateStr = expectedEndDate.toISOString().split('T')[0];
 
-        // NEW: Inject created_by
         const { data: batchData, error: batchError } = await supabase.from('batches').insert([{ 
             batch_day: day, batch_time: time, level: level, ci_id: ci, 
             start_date: startDateVal, expected_end_date: expectedEndDateStr, status: 'Active',
@@ -677,7 +678,6 @@
     }
 
     async function fetchDropoutsList() {
-        // NEW: Filter by created_by
         const { data } = await supabase.from('dropouts').select('*').eq('created_by', currentUser.id).order('created_at', { ascending: false });
         const tbody = document.getElementById('dropoutTableBody');
         if(!tbody) return;
@@ -698,7 +698,6 @@
         if(!studentId || !reason) return;
         if(reason === 'Other' && !otherReason) return;
 
-        // NEW: Inject created_by
         const { error: dropError } = await supabase.from('dropouts').insert([{ 
             student_id: studentId, level: level, reason: reason, other_reason: reason === 'Other' ? otherReason : '',
             created_by: currentUser.id
@@ -727,7 +726,6 @@
 
         if(!reason) { alert("Please provide a reason."); return; }
         
-        // NEW: Inject created_by
         const { error } = await supabase.from('level_repeats').insert([{ 
             student_id: id, student_name: name, level_to_repeat: level, reason: reason, status: 'Pending',
             created_by: currentUser.id
@@ -737,7 +735,6 @@
     }
 
     async function fetchTicketsList() {
-        // NEW: Filter by created_by
         const { data } = await supabase.from('level_repeats').select('*').eq('created_by', currentUser.id).order('created_at', { ascending: false });
         const tbody = document.getElementById('ticketTableBody');
         if(!tbody) return;
@@ -749,7 +746,6 @@
             });
         } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No tickets generated.</td></tr>`; }
     }
-</script>
 </script>
 </body>
 </html>
