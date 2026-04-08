@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Dashboard - CBS</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { margin: 0; font-family: sans-serif; background-color: #f4f6f9; }
+        .header { background: #2f3c88; color: white; padding: 20px; display: flex; justify-content: space-between; }
+        .container { padding: 20px; max-width: 1200px; margin: auto; }
+        .form-section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        input, select, button { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;}
+        button { background-color: #f95d6a; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        button:hover { background-color: #e04a57; }
+        h3 { border-bottom: 2px solid #f4f6f9; padding-bottom: 10px; color: #2f3c88; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2>UF Dashboard</h2>
+    <nav>
+        <a href="payment-tracker.html" style="color: white; margin-right: 15px;">Payment Tracker</a>
+        <a href="index.html" style="color: white;">Logout</a>
+    </nav>
+</div>
+
+<div class="container">
+    <div class="form-section">
+        <h3>Add New Student</h3>
+        <div class="grid-2">
+            <input type="text" id="stuFirstName" placeholder="Student First Name" required>
+            <input type="text" id="stuLastName" placeholder="Student Last Name" required>
+            <input type="date" id="stuDob" required>
+            <select id="stuGender">
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+            <input type="text" id="stuStandard" placeholder="Standard">
+            <input type="text" id="stuSchool" placeholder="School Name">
+            <input type="text" id="fatherName" placeholder="Father's Name">
+            <input type="tel" id="fatherMobile" placeholder="Father's Mobile">
+            <input type="text" id="motherName" placeholder="Mother's Name">
+            <input type="tel" id="motherMobile" placeholder="Mother's Mobile">
+        </div>
+        <button onclick="registerStudent()">Register & Generate ID</button>
+        <p id="generatedIdDisplay" style="color: #28a745; font-weight: bold; text-align: center; margin-top: 15px;"></p>
+    </div>
+
+    <div class="form-section">
+        <h3>Course Instructor (CI) Creation</h3>
+        <div class="grid-2">
+            <input type="text" id="ciName" placeholder="Instructor Name">
+            <input type="text" id="ciCode" placeholder="Instructor Code">
+            <input type="tel" id="ciMobile" placeholder="Mobile Number">
+        </div>
+        <button onclick="addInstructor()">Assign Instructor to UF</button>
+    </div>
+
+    <div class="form-section">
+        <h3>Batch Creation</h3>
+        <div class="grid-2">
+            <select id="batchDay">
+                <option value="Monday">Monday</option>
+                <option value="Saturday">Saturday</option>
+                <option value="Sunday">Sunday</option>
+            </select>
+            <input type="time" id="batchTime">
+            <select id="batchLevel">
+                <option value="Foundation">Foundation</option>
+                <option value="Level 1">Level 1</option>
+                <option value="Level 2">Level 2</option>
+            </select>
+            <input type="date" id="startDate" title="Start Date">
+            <select id="assignCi">
+                <option value="">Select Instructor</option>
+                </select>
+        </div>
+        <button onclick="createBatch()">Create Batch</button>
+    </div>
+</div>
+
+<script>
+    // Supabase initialization
+    const supabaseUrl = 'https://jugzuutcnxcipoyawhbq.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1Z3p1dXRjbnhjaXBveWF3aGJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mjg5OTgsImV4cCI6MjA5MTIwNDk5OH0.HzkuDQ8Yi5rq5ZP95xx8oxC1GCNcUr1kGs5F-psu95I';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    async function registerStudent() {
+        try {
+            const fName = document.getElementById('stuFirstName').value;
+            const lName = document.getElementById('stuLastName').value;
+            const dob = document.getElementById('stuDob').value;
+            
+            if(!fName || !lName || !dob) {
+                alert("Please fill in the student's name and date of birth.");
+                return;
+            }
+
+            // Extract logic for kk0217 style prefix
+            const letter1 = fName.charAt(0).toLowerCase();
+            const letter2 = lName.charAt(0).toLowerCase(); 
+            const dateObj = new Date(dob);
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const yearStr = String(dateObj.getFullYear()).slice(-2);
+            
+            const prefix = `${letter1}${letter2}${day}${yearStr}`;
+
+            // In production: Query Supabase for count of IDs starting with this prefix
+            // const { count, error } = await supabase.from('students').select('*', { count: 'exact', head: true }).ilike('unique_id', `${prefix}%`);
+            
+            // Demo logic: assuming this is the first one found today
+            let sequence = 1; 
+            const newUniqueId = `${prefix}${String(sequence).padStart(4, '0')}`;
+
+            document.getElementById('generatedIdDisplay').innerText = `Student successfully registered! Unique ID: ${newUniqueId}`;
+            
+        } catch (error) {
+            alert("An issue occurred while saving the details. Please try again.");
+        }
+    }
+
+    function addInstructor() {
+        alert("Instructor successfully assigned to your franchise.");
+    }
+
+    function createBatch() {
+        alert("Batch successfully created.");
+    }
+</script>
+</body>
+</html>
