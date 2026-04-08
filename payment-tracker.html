@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment Tracker - CBS</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f95d6a 0%, #ffffff 50%, #2f3c88 100%); background-attachment: fixed; color: #333; min-height: 100vh; }
@@ -32,7 +31,7 @@
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(0, 0, 0, 0.1); }
         th { background-color: rgba(47, 60, 136, 0.1); font-weight: 600; color: #2f3c88; }
         
-        /* PDF specific styles */
+        /* Document specific styles */
         #pdfContent { background: white; padding: 40px; border-radius: 8px; color: #333; width: 100%; box-sizing: border-box; }
         .pdf-header { text-align: center; border-bottom: 2px solid #2f3c88; padding-bottom: 15px; margin-bottom: 20px; }
         .pdf-header h2 { color: #2f3c88; margin: 0 0 5px 0; }
@@ -41,6 +40,45 @@
         .pdf-table th, .pdf-table td { border: 1px solid #ddd; padding: 12px; text-align: center; }
         .pdf-table th { background-color: #f8f9fa; color: #2f3c88; }
         .pdf-total { text-align: right; font-size: 1.2em; font-weight: bold; color: #2f3c88; }
+
+        /* ========================================= */
+        /* NEW: PRINT STYLES FOR NATIVE PDF CREATION */
+        /* ========================================= */
+        @media print {
+            /* Hide the main dashboard UI */
+            .header, .tab-bar, .form-section, button {
+                display: none !important;
+            }
+            
+            /* Remove backgrounds and shadows for clean print */
+            body { 
+                background: white !important; 
+            }
+            
+            .container { 
+                padding: 0; 
+                max-width: 100%; 
+            }
+            
+            .glass-panel { 
+                box-shadow: none !important; 
+                border: none !important; 
+                background: white !important; 
+                backdrop-filter: none !important; 
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            #pdfContent {
+                padding: 0;
+            }
+
+            /* Suggest landscape orientation to the browser */
+            @page { 
+                size: landscape; 
+                margin: 15mm; 
+            }
+        }
     </style>
 </head>
 <body>
@@ -144,7 +182,7 @@
             </p>
         </div>
 
-        <button class="action-btn green" onclick="downloadPDF()">⬇️ Download PDF for Parent</button>
+        <button class="action-btn green" onclick="printPlanner()">🖨️ Print / Save as PDF</button>
     </div>
 
 </div>
@@ -207,7 +245,7 @@
         let startDate = new Date(startMonthStr + "-01");
         startDate.setFullYear(startDate.getFullYear() + (year - 1));
 
-        // --- RENDER PDF CONTENT ---
+        // --- RENDER CONTENT ---
         document.getElementById('pdfGenDate').innerText = new Date().toLocaleDateString();
         document.getElementById('pdfStudentName').innerText = student;
         document.getElementById('pdfYear').innerText = `Year ${year}`;
@@ -250,27 +288,9 @@
         document.getElementById('plannerDisplay').style.display = 'block';
     }
 
-    // Function to convert the HTML div into a downloadable PDF
-    function downloadPDF() {
-        const studentName = document.getElementById('pdfStudentName').innerText.split(' ')[0]; 
-        const element = document.getElementById('pdfContent');
-        
-        const opt = {
-            margin:       0.5,
-            filename:     `UCMAS_Fee_Planner_${studentName}.pdf`,
-            image:        { type: 'jpeg', quality: 1 },
-            html2canvas:  { 
-                scale: 2, 
-                useCORS: true,
-                backgroundColor: '#ffffff',
-                scrollY: 0,
-                windowWidth: 1050 // Widened viewport to support landscape properly
-            },
-            // Changed orientation to landscape
-            jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
-        };
-
-        html2pdf().set(opt).from(element).save();
+    // Function to trigger the native browser print dialog
+    function printPlanner() {
+        window.print();
     }
 </script>
 </body>
