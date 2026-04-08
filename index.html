@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBS Login</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f95d6a 0%, #ffffff 50%, #2f3c88 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+        }
+        .login-box h2 {
+            color: #2f3c88;
+            margin-bottom: 20px;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #2f3c88;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: #1f285e;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-box">
+    <h2>CBS Portal Login</h2>
+    <input type="email" id="email" placeholder="Email Address" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <select id="role">
+        <option value="mumbai-dashboard.html">Master Franchise</option>
+        <option value="unit-dashboard.html">Unit Franchise (UF)</option>
+    </select>
+    <button onclick="handleLogin()">Login</button>
+</div>
+
+<script>
+    const supabaseUrl = 'https://jugzuutcnxcipoyawhbq.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1Z3p1dXRjbnhjaXBveWF3aGJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mjg5OTgsImV4cCI6MjA5MTIwNDk5OH0.HzkuDQ8Yi5rq5ZP95xx8oxC1GCNcUr1kGs5F-psu95I';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    async function handleLogin() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const targetPage = document.getElementById('role').value;
+
+        // Note for presentation: Authentication logic goes here.
+        // For the demo flow, we will route directly to the selected dashboard.
+        if(email && password) {
+             window.location.href = targetPage;
+        } else {
+             alert("Please enter both email and password to continue.");
+        }
+    }
+</script>
+</body>
+</html>
