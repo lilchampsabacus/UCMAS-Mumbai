@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Dashboard - CBS</title>
+    <style>
+        body {
+            margin: 0; font-family: sans-serif; background-color: #f4f6f9;
+        }
+        .header {
+            background: linear-gradient(to right, #f95d6a, #2f3c88);
+            color: white; padding: 20px; display: flex; justify-content: space-between;
+        }
+        .container { padding: 20px; }
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center; border-bottom: 4px solid #2f3c88;
+        }
+        table {
+            width: 100%; border-collapse: collapse; background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;
+        }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #2f3c88; color: white; }
+        .btn-toggle { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; color: white;}
+        .btn-enable { background-color: #28a745; }
+        .btn-disable { background-color: #dc3545; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2>CBS Mumbai Master Franchise</h2>
+    <a href="index.html" style="color: white; text-decoration: none; margin-top: 5px;">Logout</a>
+</div>
+
+<div class="container">
+    <div class="stats-grid">
+        <div class="stat-card"><h3>Total UFs</h3><h2 id="totalUf">0</h2></div>
+        <div class="stat-card"><h3>Total Students</h3><h2 id="totalStudents">0</h2></div>
+        <div class="stat-card"><h3>Active Students</h3><h2 id="activeStudents">0</h2></div>
+        <div class="stat-card"><h3>Dropouts</h3><h2 id="dropouts">0</h2></div>
+    </div>
+
+    <h3>Unit Franchise Management</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>UF Name</th>
+                <th>Code</th>
+                <th>Area</th>
+                <th>Students</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="ufTableBody">
+            <tr>
+                <td>Demo Center Andheri</td>
+                <td>UF-AND-01</td>
+                <td>Andheri East</td>
+                <td>120</td>
+                <td>Active</td>
+                <td><button class="btn-toggle btn-disable">Disable</button></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
